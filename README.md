@@ -7,5 +7,6 @@
 
 ## Rusty Roguelite
 
-This project will start out as an exercise in learning the [Rust](https://www.rust-lang.org/learn/) programming language, by making a basic [Roguelite game](https://tomassedovic.github.io/roguelike-tutorial/).
+This project will start out as an exercise in [learning](https://www.rust-lang.org/learn/) the [Rust](https://doc.rust-lang.org/book/title-page.html) programming language, by making a basic [Roguelite
+game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust library [libtcod](https://github.com/libtcod/libtcod).
 

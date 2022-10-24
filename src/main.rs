@@ -30,9 +30,9 @@ const COLOR_LIGHT_WALL: Color = Color { r: 30, g: 16, b: 5 };
 const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
 
 //parameters for dungeon generator
-const ROOM_MAX_SIZE: i32 = 10;
+const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
-const MAX_ROOMS: i32 = 30;
+const MAX_ROOMS: i32 = 32;
 
 
 struct Tcod {

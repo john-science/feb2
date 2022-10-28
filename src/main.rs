@@ -185,7 +185,7 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
-fn place_objects(room: Rect, objects: &mut Vec<Object>) {
+fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
 
@@ -194,14 +194,18 @@ fn place_objects(room: Rect, objects: &mut Vec<Object>) {
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
 
-        let mut monster = if rand::random::<f32>() < 0.8 {  // 80% chance of getting an orc
-            // create an orc
-            Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true)
-        } else {
-            Object::new(x, y, 'T', "troll", DARKER_GREEN, true)
-        };
+        // only place it if the tile is not blocked
+        if !is_blocked(x, y, map, objects) {
+            let mut monster = if rand::random::<f32>() < 0.8 {  // 80% chance of getting an orc (TODO: HARDCODED)
+                // create an orc
+                Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true)
+            } else {
+                Object::new(x, y, 'T', "troll", DARKER_GREEN, true)
+            };
 
-        objects.push(monster);
+            monster.alive = true;
+            objects.push(monster);
+        }
     }
 }
 
@@ -272,7 +276,7 @@ fn make_map(objects: &mut Vec<Object>) -> Map {
                 }
 
                 // add some content to this room, such as monsters
-                place_objects(new_room, objects);
+                place_objects(new_room, &map, objects);
             }
 
             // finally, append the new room to the list
@@ -354,10 +358,10 @@ fn handle_keys(tcod: &mut Tcod, game: &Game, objects: &mut [Object]) -> bool {
     let key = tcod.root.wait_for_keypress(true);
     match key {
         // movement keys
-        Key { code: Up, .. } => move_by(0, 0, -1, &game.map, objects),
-        Key { code: Down, .. } => move_by(0, 0, 1, &game.map, objects),
-        Key { code: Left, .. } => move_by(0, -1, 0, &game.map, objects),
-        Key { code: Right, .. } => move_by(0, 1, 0, &game.map, objects),
+        Key { code: Up, .. } => move_by(PLAYER, 0, -1, &game.map, objects),
+        Key { code: Down, .. } => move_by(PLAYER, 0, 1, &game.map, objects),
+        Key { code: Left, .. } => move_by(PLAYER, -1, 0, &game.map, objects),
+        Key { code: Right, .. } => move_by(PLAYER, 1, 0, &game.map, objects),
 
         // Escape to exit game
         Key { code: Escape, .. } => return true,
@@ -390,7 +394,8 @@ fn main() {
     };
 
     // create object representing the player
-    let player = Object::new(0, 0, '@', "player", WHITE, true);
+    let mut player = Object::new(0, 0, '@', "player", WHITE, true);
+    player.alive = true;
 
     // the list of objects with those two
     let mut objects = vec![player];

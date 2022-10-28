@@ -51,27 +51,30 @@ struct Tcod {
 struct Object {
     x: i32,
     y: i32,
-    char: char,
+    chr: char,
     color: Color,
+    name: String,
+    blocks: bool,
+    alive: bool,
 }
 
 impl Object {
-    pub fn new(x: i32, y: i32, char: char, color: Color) -> Self {
-        Object { x, y, char, color }
-    }
-
-    // move by the given amount, if the destination is not blocked
-    pub fn move_by(&mut self, dx: i32, dy: i32, game: &Game) {
-        if !game.map[(self.x + dx) as usize][(self.y + dy) as usize].blocked {
-            self.x += dx;
-            self.y += dy;
+    pub fn new(x: i32, y: i32, chr: char, name: &str, color: Color, blocks: bool) -> Self {
+        Object {
+            x: x,
+            y: y,
+            chr: chr,
+            color: color,
+            name: name.into(),
+            blocks: blocks,
+            alive: false,
         }
     }
 
     // set the color and then draw the character that represents this object at its position
     pub fn draw(&self, con: &mut dyn Console) {
         con.set_default_foreground(self.color);
-        con.put_char(self.x, self.y, self.char, BackgroundFlag::None);
+        con.put_char(self.x, self.y, self.chr, BackgroundFlag::None);
     }
 
     pub fn pos(&self) -> (i32, i32) {
@@ -193,13 +196,26 @@ fn place_objects(room: Rect, objects: &mut Vec<Object>) {
 
         let mut monster = if rand::random::<f32>() < 0.8 {  // 80% chance of getting an orc
             // create an orc
-            Object::new(x, y, 'O', DESATURATED_GREEN)
+            Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true)
         } else {
-            Object::new(x, y, 'T', DARKER_GREEN)
+            Object::new(x, y, 'T', "troll", DARKER_GREEN, true)
         };
 
         objects.push(monster);
     }
+}
+
+
+fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
+    // first test the map tile
+    if map[x as usize][y as usize].blocked {
+        return true;
+    }
+
+    // now check for any blocking objects
+    objects
+        .iter()
+        .any(|object| object.blocks && object.pos() == (x, y))
 }
 
 
@@ -322,17 +338,26 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
 }
 
 
-fn handle_keys(tcod: &mut Tcod, game: &Game, player: &mut Object) -> bool {
+/// move by the given amount, if the destination is not blocked
+fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
+    let (x, y) = objects[id].pos();
+    if !is_blocked(x + dx, y + dy, map, objects) {
+        objects[id].set_pos(x + dx, y + dy);
+    }
+}
+
+
+fn handle_keys(tcod: &mut Tcod, game: &Game, objects: &mut [Object]) -> bool {
     use tcod::input::Key;
     use tcod::input::KeyCode::*;
 
     let key = tcod.root.wait_for_keypress(true);
     match key {
         // movement keys
-        Key { code: Up, .. } => player.move_by(0, -1, game),
-        Key { code: Down, .. } => player.move_by(0, 1, game),
-        Key { code: Left, .. } => player.move_by(-1, 0, game),
-        Key { code: Right, .. } => player.move_by(1, 0, game),
+        Key { code: Up, .. } => move_by(0, 0, -1, &game.map, objects),
+        Key { code: Down, .. } => move_by(0, 0, 1, &game.map, objects),
+        Key { code: Left, .. } => move_by(0, -1, 0, &game.map, objects),
+        Key { code: Right, .. } => move_by(0, 1, 0, &game.map, objects),
 
         // Escape to exit game
         Key { code: Escape, .. } => return true,
@@ -365,7 +390,7 @@ fn main() {
     };
 
     // create object representing the player
-    let player = Object::new(0, 0, '@', WHITE);
+    let player = Object::new(0, 0, '@', "player", WHITE, true);
 
     // the list of objects with those two
     let mut objects = vec![player];
@@ -405,7 +430,7 @@ fn main() {
         // handle keys and exit game if needed
         let player = &mut objects[PLAYER];
         previous_player_position = (player.x, player.y);
-        let exit = handle_keys(&mut tcod, &game, player);
+        let exit = handle_keys(&mut tcod, &game, &mut objects);
         if exit { break; }
     }
 }

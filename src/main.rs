@@ -39,6 +39,14 @@ const MAX_ROOM_MONSTERS: i32 = 3;
 const PLAYER: usize = 0;
 
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum PlayerAction {
+    TookTurn,
+    DidntTakeTurn,
+    Exit,
+}
+
+
 struct Tcod {
     root: Root,
     con: Offscreen,
@@ -342,7 +350,8 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
 }
 
 
-/// move by the given amount, if the destination is not blocked
+// TODO: This needs to return true/false for if a move actually happened.
+// move by the given amount, if the destination is not blocked
 fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
     let (x, y) = objects[id].pos();
     if !is_blocked(x + dx, y + dy, map, objects) {
@@ -351,26 +360,63 @@ fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
 }
 
 
-fn handle_keys(tcod: &mut Tcod, game: &Game, objects: &mut [Object]) -> bool {
+fn player_move_or_attack(dx: i32, dy: i32, game: &Game, objects: &mut [Object]) {
+    // the coordinates the player is moving to/attacking
+    let x = objects[PLAYER].x + dx;
+    let y = objects[PLAYER].y + dy;
+
+    // try to find an attackable object there
+    let target_id = objects.iter().position(|object| object.pos() == (x, y));
+
+    // attack if target found, move otherwise
+    match target_id {
+        Some(target_id) => {
+            println!(
+                "The {} laughs at your puny efforts to attack him!",
+                objects[target_id].name
+            );
+        }
+        None => {
+            move_by(PLAYER, dx, dy, &game.map, objects);
+        }
+    };
+}
+
+
+fn handle_keys(tcod: &mut Tcod, game: &Game, objects: &mut [Object]) -> PlayerAction {
+    use PlayerAction::*;
     use tcod::input::Key;
     use tcod::input::KeyCode::*;
 
     let key = tcod.root.wait_for_keypress(true);
-    match key {
+    let player_alive = objects[PLAYER].alive;
+    match (key, key.text(), player_alive) {
         // movement keys
-        Key { code: Up, .. } => move_by(PLAYER, 0, -1, &game.map, objects),
-        Key { code: Down, .. } => move_by(PLAYER, 0, 1, &game.map, objects),
-        Key { code: Left, .. } => move_by(PLAYER, -1, 0, &game.map, objects),
-        Key { code: Right, .. } => move_by(PLAYER, 1, 0, &game.map, objects),
+        (Key { code: Up, .. }, _, true) => {
+            player_move_or_attack(0, -1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: Down, .. }, _, true) => {
+            player_move_or_attack(0, 1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: Left, .. }, _, true) => {
+            player_move_or_attack(-1, 0, game, objects);
+            return TookTurn;
+        }
+        (Key { code: Right, .. }, _, true) => {
+            player_move_or_attack(1, 0, game, objects);
+            return TookTurn;
+        }
+
+        // TODO: Fullscreen wasn't working.
+        // TODO: Wait a turn (or 10).
 
         // Escape to exit game
-        Key { code: Escape, .. } => return true,
+        (Key { code: Escape, .. }, _, _) => { return Exit } // exit game
 
-        _ => {}
-    }
-
-    // NOTE: A language convenience says this line could just be "false", with no "return" or ";".
-    return false;
+        (_, _, _) => { return DidntTakeTurn; }
+    };
 }
 
 
@@ -433,9 +479,20 @@ fn main() {
         tcod.root.flush();
 
         // handle keys and exit game if needed
-        let player = &mut objects[PLAYER];
-        previous_player_position = (player.x, player.y);
-        let exit = handle_keys(&mut tcod, &game, &mut objects);
-        if exit { break; }
+        previous_player_position = objects[PLAYER].pos();
+        let player_action = handle_keys(&mut tcod, &game, &mut objects);
+        if player_action == PlayerAction::Exit {
+            break;
+        }
+
+        // let monsters take their turn
+        if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
+            for object in &objects {
+                // only if object is not player
+                if (object as *const _) != (&objects[PLAYER] as *const _) {
+                    println!("The {} growls!", object.name);
+                }
+            }
+        }
     }
 }

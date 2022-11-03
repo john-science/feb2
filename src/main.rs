@@ -113,6 +113,13 @@ impl Object {
         self.x = x;
         self.y = y;
     }
+
+    /// return the distance to another object
+    pub fn distance_to(&self, other: &Object) -> f32 {
+        let dx = other.x - self.x;
+        let dy = other.y - self.y;
+        return ((dx.pow(2) + dy.pow(2)) as f32).sqrt();
+    }
 }
 
 
@@ -224,9 +231,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
+            // TODO: Replace "monster" with "npc".
             let mut monster = if rand::random::<f32>() < 0.8 {
-                // 80% chance of getting an orc
-                // create an orc
+                // 80% chance of creating an orc
                 let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
                 orc.fighter = Some(Fighter {
                     max_hp: 10,
@@ -397,6 +404,41 @@ fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
 }
 
 
+fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects: &mut [Object]) {
+    // vector from this object to the target, and distance
+    let dx = target_x - objects[id].x;
+    let dy = target_y - objects[id].y;
+    let distance = ((dx.pow(2) + dy.pow(2)) as f32).sqrt();
+
+    // normalize it to length 1 (preserving direction), then round it and
+    // convert to integer so the movement is restricted to the map grid
+    let dx = (dx as f32 / distance).round() as i32;
+    let dy = (dy as f32 / distance).round() as i32;
+    move_by(id, dx, dy, map, objects);
+}
+
+
+// TODO: AI can't handle corners.
+fn ai_take_turn(monster_id: usize, tcod: &Tcod, game: &Game, objects: &mut [Object]) {
+    // a basic monster takes its turn. If you can see it, it can see you
+    let (monster_x, monster_y) = objects[monster_id].pos();
+    if tcod.fov.is_in_fov(monster_x, monster_y) {
+        if objects[monster_id].distance_to(&objects[PLAYER]) >= 2.0 {
+            // move towards player if far away
+            let (player_x, player_y) = objects[PLAYER].pos();
+            move_towards(monster_id, player_x, player_y, &game.map, objects);
+        } else if objects[PLAYER].fighter.map_or(false, |f| f.hp > 0) {
+            // close enough, attack! (if the player is still alive.)
+            let monster = &objects[monster_id];
+            println!(
+                "The attack of the {} bounces off your shiny metal armor!",
+                monster.name
+            );
+        }
+    }
+}
+
+
 fn player_move_or_attack(dx: i32, dy: i32, game: &Game, objects: &mut [Object]) {
     // the coordinates the player is moving to/attacking
     let x = objects[PLAYER].x + dx;
@@ -530,10 +572,9 @@ fn main() {
 
         // let monsters take their turn
         if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
-            for object in &objects {
-                // only if object is not player
-                if (object as *const _) != (&objects[PLAYER] as *const _) {
-                    println!("The {} growls!", object.name);
+            for id in 0..objects.len() {
+                if id != PLAYER && objects[id].ai.is_some() {
+                    ai_take_turn(id, &tcod, &game, &mut objects);
                 }
             }
         }

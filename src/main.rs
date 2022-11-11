@@ -702,6 +702,8 @@ fn monster_death(monster: &mut Object, game: &mut Game) {
 }
 
 
+
+// TODO: Fullscreen isn't working.
 // TODO: I want to be able to move on diagonals.
 // TODO: DO we want to support letter directions?
 // TODO: Need a wait button (.)
@@ -730,9 +732,6 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             return TookTurn;
         }
 
-        // TODO: Fullscreen wasn't working.
-        // TODO: Wait a turn (or 10).
-
         // Escape to exit game
         (Key { code: Escape, .. }, _, _) => { return Exit } // exit game
 
@@ -748,7 +747,7 @@ fn main() {
 
     // initialize the TCOD "Root" object
     let root: Root = Root::initializer()
-        .font("arial10x10.png", FontLayout::Tcod)
+        .font("dejavu16x16.png", FontLayout::Tcod)
         .font_type(FontType::Greyscale)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title("February Second")

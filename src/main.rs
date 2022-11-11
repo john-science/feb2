@@ -1,10 +1,11 @@
 /*
 February Second
  */
-use rand::Rng;
 use std::cmp;
+use rand::Rng;
 use tcod::colors::*;
 use tcod::console::*;
+use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // actual size of the window
@@ -107,6 +108,8 @@ struct Tcod {
     con: Offscreen,
     panel: Offscreen,
     fov: FovMap,
+    key: Key,
+    mouse: Mouse,
 }
 
 
@@ -167,7 +170,7 @@ struct Object {
     name: String,
     blocks: bool,
     alive: bool,
-    fighter: Option<Fighter>,  
+    fighter: Option<Fighter>,
     ai: Option<Ai>,
 }
 
@@ -181,7 +184,7 @@ impl Object {
             name: name.into(),
             blocks: blocks,
             alive: false,
-            fighter: None,  
+            fighter: None,
             ai: None,
         }
     }
@@ -349,6 +352,21 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
+// return a string with the names of all objects under the mouse
+fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
+    let (x, y) = (mouse.cx as i32, mouse.cy as i32);
+
+    // create a list with the names of all objects at the mouse's coordinates and in FOV
+    let names = objects
+        .iter()
+        .filter(|obj| obj.pos() == (x, y) && fov_map.is_in_fov(obj.x, obj.y))
+        .map(|obj| obj.name.clone())
+        .collect::<Vec<_>>();
+
+    names.join(", ") // join the names, separated by commas
+}
+
+
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
@@ -406,6 +424,7 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 
+// TODO: Bug. I entered a game and there were 3 monsters in my room. (No monsters should spawn in FOV of the player at the Start.)
 fn make_map(objects: &mut Vec<Object>) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
@@ -536,6 +555,15 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
         DARKER_RED,
     );
 
+    // display names of objects under the mouse
+    tcod.panel.set_default_foreground(LIGHT_GREY);
+    tcod.panel.print_ex(
+        1,
+        0,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        get_names_under_mouse(tcod.mouse, objects, &tcod.fov),
+    );
 
     // print the game messages, one line at a time
     let mut y = MSG_HEIGHT as i32;
@@ -677,16 +705,13 @@ fn monster_death(monster: &mut Object, game: &mut Game) {
 // TODO: I want to be able to move on diagonals.
 // TODO: DO we want to support letter directions?
 // TODO: Need a wait button (.)
-// TODO: Need a long wait button (z?) (10 turns)
-// TODO: Need a long wait button (Z?) (100 turns)
-fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> PlayerAction {
-    use PlayerAction::*;
-    use tcod::input::Key;
+// TODO: Need a long wait button (10/100 turns)
+fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
     use tcod::input::KeyCode::*;
+    use PlayerAction::*;
 
-    let key = tcod.root.wait_for_keypress(true);
     let player_alive = objects[PLAYER].alive;
-    match (key, key.text(), player_alive) {
+    match (tcod.key, tcod.key.text(), player_alive) {
         // movement keys
         (Key { code: Up, .. }, _, true) => {
             player_move_or_attack(0, -1, game, objects);
@@ -711,6 +736,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> Play
         // Escape to exit game
         (Key { code: Escape, .. }, _, _) => { return Exit } // exit game
 
+        //_ => DidntTakeTurn,
         (_, _, _) => { return DidntTakeTurn; }
     };
 }
@@ -734,6 +760,8 @@ fn main() {
         con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
         panel: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
         fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
+        key: Default::default(),
+        mouse: Default::default(),
     };
 
     // create object representing the player
@@ -783,8 +811,14 @@ fn main() {
         // clear the off-screen console
         tcod.con.clear();
 
+        match input::check_for_event(input::MOUSE | input::KEY_PRESS) {
+            Some((_, Event::Mouse(m))) => tcod.mouse = m,
+            Some((_, Event::Key(k))) => tcod.key = k,
+            _ => tcod.key = Default::default(),
+        }
+
         // render the screen
-        let fov_recompute = previous_player_position != (objects[PLAYER].x, objects[PLAYER].y);
+        let fov_recompute = previous_player_position != (objects[PLAYER].pos());
         render_all(&mut tcod, &mut game, &objects, fov_recompute);
 
         tcod.root.flush();

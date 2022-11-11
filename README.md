@@ -15,7 +15,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
 
 > Pondering Design Choices
 
-* Start at the bottom and go up.
+* Start at the bottom and go up. Ascend.
 * Have a Karma bar.
 * The goal of Purgatory is to burn away your attachments.
 * There should be a save/load game menu.

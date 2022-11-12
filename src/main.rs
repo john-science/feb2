@@ -44,6 +44,7 @@ const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
 const MAX_ROOM_MONSTERS: i32 = 3;
 const MAX_ROOM_ITEMS: i32 = 2;
+const INVENTORY_WIDTH: i32 = 50;
 
 // player will always be the first object
 const PLAYER: usize = 0;
@@ -440,6 +441,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
 
 
 
+// TODO: Some items should stack, like health potions, and definitely money.
 // add to the player's inventory and remove from the map
 fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
     if game.inventory.len() >= 26 {
@@ -454,6 +456,87 @@ fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
         let item = objects.swap_remove(object_id);
         game.messages.add(format!("You picked up a {}.", item.name), GREEN);
         game.inventory.push(item);
+    }
+}
+
+
+fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
+    assert!(
+        options.len() <= 26,
+        "Cannot have a menu with more than 26 options."
+    );
+
+    // calculate total height for the header (after auto-wrap) and one line per option
+    let header_height = root.get_height_rect(0, 0, width, SCREEN_HEIGHT, header);
+    let height = options.len() as i32 + header_height;
+
+    // create an off-screen console that represents the menu's window
+    let mut window = Offscreen::new(width, height);
+
+    // print the header, with auto-wrap
+    window.set_default_foreground(WHITE);
+    window.print_rect_ex(
+        0,
+        0,
+        width,
+        height,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        header,
+    );
+
+    // print all the options
+    for (index, option_text) in options.iter().enumerate() {
+        let menu_letter = (b'a' + index as u8) as char;
+        let text = format!("({}) {}", menu_letter, option_text.as_ref());
+        window.print_ex(
+            0,
+            header_height + index as i32,
+            BackgroundFlag::None,
+            TextAlignment::Left,
+            text,
+        );
+    }
+
+    // blit the contents of "window" to the root console
+    let x = SCREEN_WIDTH / 2 - width / 2;
+    let y = SCREEN_HEIGHT / 2 - height / 2;
+    blit(&window, (0, 0), (width, height), root, (x, y), 1.0, 0.7);
+
+    // present the root console to the player and wait for a key-press
+    root.flush();
+    let key = root.wait_for_keypress(true);
+
+    // convert the ASCII code to an index; if it corresponds to an option, return it
+    if key.printable.is_alphabetic() {
+        let index = key.printable.to_ascii_lowercase() as usize - 'a' as usize;
+        if index < options.len() {
+            return Some(index);
+        } else {
+            return None;
+        }
+    } else {
+        return None;
+    }
+}
+
+
+// TODO: Why does this return an Option, not an i32? Couldn't we just return 0, not None?
+fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option<usize> {
+    // show a menu with each item of the inventory as an option
+    let options = if inventory.len() == 0 {
+        vec!["Inventory is empty.".into()]
+    } else {
+        inventory.iter().map(|item| item.name.clone()).collect()
+    };
+
+    let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
+
+    // if an item was chosen, return it
+    if inventory.len() > 0 {
+        return inventory_index;
+    } else {
+        return None;
     }
 }
 
@@ -750,6 +833,7 @@ fn monster_death(monster: &mut Object, game: &mut Game) {
 
 
 
+// TODO: Add drop item command (d).
 // TODO: Fullscreen isn't working.
 // TODO: I want to be able to move on diagonals.
 // TODO: DO we want to support letter directions?
@@ -777,6 +861,20 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
         (Key { code: Right, .. }, _, true) => {
             player_move_or_attack(1, 0, game, objects);
             return TookTurn;
+        }
+
+        // show the inventory
+        (Key { code: Text, .. }, "i", true) => {
+            // show the inventory: if an item is selected, use it
+            let inventory_index = inventory_menu(
+                &game.inventory,
+                "Press the key next to an item to use it, or any other to cancel.\n",
+                &mut tcod.root,
+            );
+            //if let Some(inventory_index) = inventory_index {
+            //    use_item(inventory_index, tcod, game, objects);
+            //}
+            return DidntTakeTurn;
         }
 
         // Pick up an item

@@ -45,6 +45,7 @@ const MAX_ROOMS: i32 = 32;
 const MAX_ROOM_MONSTERS: i32 = 3;
 const MAX_ROOM_ITEMS: i32 = 2;
 const INVENTORY_WIDTH: i32 = 50;
+const HEAL_AMOUNT: i32 = 4;
 
 // player will always be the first object
 const PLAYER: usize = 0;
@@ -67,6 +68,12 @@ enum Ai {
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Item {
     Heal,
+}
+
+
+enum UseResult {
+    UsedUp,
+    Cancelled,
 }
 
 
@@ -259,6 +266,17 @@ impl Object {
                 ),
                 WHITE
             );
+        }
+    }
+
+    // TODO: This seems like a silly place for this.
+    // heal by the given amount, without going over the maximum
+    pub fn heal(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.hp += amount;
+            if fighter.hp > fighter.max_hp {
+                fighter.hp = fighter.max_hp;
+            }
         }
     }
 }
@@ -457,6 +475,48 @@ fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
         game.messages.add(format!("You picked up a {}.", item.name), GREEN);
         game.inventory.push(item);
     }
+}
+
+
+fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
+    use Item::*;
+    // just call the "use_function" if it is defined
+    if let Some(item) = game.inventory[inventory_id].item {
+        let on_use = match item {
+            // TODO: This seems like a limiting design.
+            Heal => cast_heal,
+        };
+        match on_use(inventory_id, tcod, game, objects) {
+            UseResult::UsedUp => {
+                // destroy after use, unless it was cancelled for some reason
+                game.inventory.remove(inventory_id);
+            }
+            UseResult::Cancelled => {
+                game.messages.add("Cancelled", WHITE);
+            }
+        }
+    } else {
+        game.messages.add(
+            format!("The {} cannot be used.", game.inventory[inventory_id].name),
+            WHITE,
+        );
+    }
+}
+
+
+fn cast_heal(_inventory_id: usize, _tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
+    // heal the player
+    if let Some(fighter) = objects[PLAYER].fighter {
+        if fighter.hp == fighter.max_hp {
+            game.messages.add("You are already at full health.", RED);
+            return UseResult::Cancelled;
+        }
+        game.messages.add("Your wounds start to feel better!", LIGHT_VIOLET);
+        objects[PLAYER].heal(HEAL_AMOUNT);
+        return UseResult::UsedUp;
+    }
+
+    return UseResult::Cancelled;
 }
 
 
@@ -871,9 +931,9 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
                 "Press the key next to an item to use it, or any other to cancel.\n",
                 &mut tcod.root,
             );
-            //if let Some(inventory_index) = inventory_index {
-            //    use_item(inventory_index, tcod, game, objects);
-            //}
+            if let Some(inventory_index) = inventory_index {
+                use_item(inventory_index, tcod, game, objects);
+            }
             return DidntTakeTurn;
         }
 

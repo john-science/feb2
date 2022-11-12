@@ -27,4 +27,10 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
 * I don't have time for manually-generating content.
   * Not items, not monsters, not spells.
   * Imagination will have to do for flavor.
+* Monster Mechanics ideas:
+  * Orcs and Trolls love battle -> +karma
+  * Orcs and Trolls love killing you -> +karma
+  * Orcs and Trolls hate being killed -> -karma
+  * Orcs love money (and for enough, will become non-hostile) -> +karma
+  * Orcs will go for money, not you
 

@@ -43,6 +43,7 @@ const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
 const MAX_ROOM_MONSTERS: i32 = 3;
+const MAX_ROOM_ITEMS: i32 = 2;
 
 // player will always be the first object
 const PLAYER: usize = 0;
@@ -59,6 +60,12 @@ enum PlayerAction {
 #[derive(Clone, Debug, PartialEq)]
 enum Ai {
     Basic,
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Item {
+    Heal,
 }
 
 
@@ -161,7 +168,7 @@ struct Fighter {
 
 
 // This is a generic object: the player, a monster, an item, the stairs...
-// It's always represented by a character on screen.
+// It's represented by a character on screen (unless it's in an inventory).
 struct Object {
     x: i32,
     y: i32,
@@ -172,6 +179,7 @@ struct Object {
     alive: bool,
     fighter: Option<Fighter>,
     ai: Option<Ai>,
+    item: Option<Item>,
 }
 
 impl Object {
@@ -186,6 +194,7 @@ impl Object {
             alive: false,
             fighter: None,
             ai: None,
+            item: None,
         }
     }
 
@@ -323,6 +332,7 @@ type Map = Vec<Vec<Tile>>;
 struct Game {
     map: Map,
     messages: Messages,
+    inventory: Vec<Object>,
 }
 
 
@@ -381,7 +391,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             // TODO: Replace "monster" with "npc".
             let mut monster = if rand::random::<f32>() < 0.8 {
                 // 80% chance of creating an orc
-                let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
+                let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);  // TODO: centralize the monsters
                 orc.fighter = Some(Fighter {
                     max_hp: 10,
                     hp: 10,
@@ -392,7 +402,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                 orc
             } else {
                 // create a troll
-                let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
+                let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);  // TODO: centralize the monsters
                 troll.fighter = Some(Fighter {
                     max_hp: 16,
                     hp: 16,
@@ -407,6 +417,43 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             monster.ai = Some(Ai::Basic);
             objects.push(monster);
         }
+    }
+
+    // TODO: This is a silly number of health potions.
+    // choose random number of items
+    let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
+
+    for _ in 0..num_items {
+        // choose random spot for this item
+        let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
+        let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
+
+        // only place it if the tile is not blocked
+        if !is_blocked(x, y, map, objects) {
+            // create a healing potion
+            let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);  // TODO: centralize the items
+            object.item = Some(Item::Heal);
+            objects.push(object);
+        }
+    }
+}
+
+
+
+// add to the player's inventory and remove from the map
+fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
+    if game.inventory.len() >= 26 {
+        game.messages.add(
+            format!(
+                "Your inventory is full, you cannot pick up {}.",
+                objects[object_id].name
+            ),
+            RED,
+        );
+    } else {
+        let item = objects.swap_remove(object_id);
+        game.messages.add(format!("You picked up a {}.", item.name), GREEN);
+        game.inventory.push(item);
     }
 }
 
@@ -732,10 +779,22 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             return TookTurn;
         }
 
+        // Pick up an item
+        (Key { code: Text, .. }, "g", true) => {
+            let item_id = objects
+                .iter()
+                .position(|object| object.pos() == objects[PLAYER].pos() && object.item.is_some());
+            if let Some(item_id) = item_id {
+                pick_item_up(item_id, game, objects);
+                return TookTurn;
+            } else {
+                return DidntTakeTurn;
+            }
+        }
+
         // Escape to exit game
         (Key { code: Escape, .. }, _, _) => { return Exit } // exit game
 
-        //_ => DidntTakeTurn,
         (_, _, _) => { return DidntTakeTurn; }
     };
 }
@@ -764,7 +823,7 @@ fn main() {
     };
 
     // create object representing the player
-    let mut player = Object::new(0, 0, '@', "player", WHITE, true);
+    let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter {
         max_hp: 30,
@@ -782,6 +841,7 @@ fn main() {
         // generate map (at this point it's not drawn to the screen)
         map: make_map(&mut objects),
         messages: Messages::new(),
+        inventory: vec![],
     };
 
     // populate the FOV map, according to the generated map

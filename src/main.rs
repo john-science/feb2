@@ -64,6 +64,10 @@ enum PlayerAction {
 #[derive(Clone, Debug, PartialEq)]
 enum Ai {
     Basic,
+    Confused {
+        previous_ai: Box<Ai>,
+        num_turns: i32,
+    },
 }
 
 
@@ -461,6 +465,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             let mut monster = if rand::random::<f32>() < 0.8 {
                 // 80% chance of creating an orc
                 let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);  // TODO: centralize the monsters
+                orc.ai = Some(Ai::Basic);
                 orc.fighter = Some(Fighter {
                     max_hp: 10,
                     hp: 10,
@@ -472,6 +477,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             } else {
                 // create a troll
                 let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);  // TODO: centralize the monsters
+                troll.ai = Some(Ai::Basic);
                 troll.fighter = Some(Fighter {
                     max_hp: 16,
                     hp: 16,
@@ -962,8 +968,6 @@ fn monster_death(monster: &mut Object, game: &mut Game) {
 
 // TODO: Add drop item command (d).
 // TODO: Fullscreen isn't working.
-// TODO: I want to be able to move on diagonals.
-// TODO: DO we want to support letter directions?
 // TODO: Need a wait button (.)
 // TODO: Need a long wait button (10/100 turns)
 fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
@@ -987,6 +991,39 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
         }
         (Key { code: Right, .. }, _, true) => {
             player_move_or_attack(1, 0, game, objects);
+            return TookTurn;
+        }
+        // numpad keys
+        (Key { code: NumPad1, .. }, _, true) => {
+            player_move_or_attack(-1, 1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad2, .. }, _, true) => {
+            player_move_or_attack(0, 1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad3, .. }, _, true) => {
+            player_move_or_attack(1, 1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad4, .. }, _, true) => {
+            player_move_or_attack(-1, 0, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad6, .. }, _, true) => {
+            player_move_or_attack(1, 0, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad7, .. }, _, true) => {
+            player_move_or_attack(-1, -1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad8, .. }, _, true) => {
+            player_move_or_attack(0, -1, game, objects);
+            return TookTurn;
+        }
+        (Key { code: NumPad9, .. }, _, true) => {
+            player_move_or_attack(1, -1, game, objects);
             return TookTurn;
         }
 

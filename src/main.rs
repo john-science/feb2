@@ -604,6 +604,15 @@ fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
 }
 
 
+fn drop_item(inventory_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
+    let mut item = game.inventory.remove(inventory_id);
+    item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
+    game.messages.add(format!("You dropped a {}.", item.name), YELLOW);
+    objects.push(item);
+}
+
+
+// The player should also be able to use scrolls/potions they are standing on (and is useable).
 fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
     use Item::*;
     // just call the "use_function" if it is defined
@@ -1250,8 +1259,21 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             }
         }
 
+        // show the inventory; if an item is selected, drop it
+        (Key { code: Text, .. }, "d", true) => {
+            let inventory_index = inventory_menu(
+                &game.inventory,
+                "Press the key next to an item to drop it, or any other to cancel.\n'",
+                &mut tcod.root,
+            );
+            if let Some(inventory_index) = inventory_index {
+                drop_item(inventory_index, game, objects);
+            }
+            return DidntTakeTurn;
+        }
+
         // Escape to exit game
-        (Key { code: Escape, .. }, _, _) => { return Exit } // exit game
+        (Key { code: Escape, .. }, _, _) => { return Exit; }
 
         (_, _, _) => { return DidntTakeTurn; }
     };

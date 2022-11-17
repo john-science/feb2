@@ -1280,6 +1280,21 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
 }
 
 
+fn initialise_fov(tcod: &mut Tcod, map: &Map) {
+    // create the FOV map, according to the generated map
+    for y in 0..MAP_HEIGHT {
+        for x in 0..MAP_WIDTH {
+            tcod.fov.set(
+                x,
+                y,
+                !map[x as usize][y as usize].block_sight,
+                !map[x as usize][y as usize].blocked,
+            );
+        }
+    }
+}
+
+
 fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
@@ -1303,17 +1318,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         inventory: vec![],
     };
 
-    // populate the FOV map, according to the generated map
-    for y in 0..MAP_HEIGHT {
-        for x in 0..MAP_WIDTH {
-            tcod.fov.set(
-                x,
-                y,
-                !game.map[x as usize][y as usize].block_sight,
-                !game.map[x as usize][y as usize].blocked,
-            );
-        }
-    }
+    initialise_fov(tcod, &game.map);
 
     // a welcome message
     game.messages.add(

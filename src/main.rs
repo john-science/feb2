@@ -1330,6 +1330,46 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
 }
 
 
+fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
+    // force FOV "recompute" first time through the game loop
+    let mut previous_player_position = (-1, -1);
+
+    // the game loop!
+    while !tcod.root.window_closed() {
+        // clear the off-screen console
+        tcod.con.clear();
+
+        match input::check_for_event(input::MOUSE | input::KEY_PRESS) {
+            Some((_, Event::Mouse(m))) => tcod.mouse = m,
+            Some((_, Event::Key(k))) => tcod.key = k,
+            _ => tcod.key = Default::default(),
+        }
+
+        // render the screen
+        let fov_recompute = previous_player_position != (objects[PLAYER].pos());
+        render_all(tcod, game, objects, fov_recompute);
+
+        tcod.root.flush();
+
+        // handle keys and exit game if needed
+        previous_player_position = objects[PLAYER].pos();
+        let player_action = handle_keys(tcod, game, objects);
+        if player_action == PlayerAction::Exit {
+            break;
+        }
+
+        // let monsters take their turn
+        if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
+            for id in 0..objects.len() {
+                if id != PLAYER && objects[id].ai.is_some() {
+                    ai_take_turn(id, tcod, game, objects);
+                }
+            }
+        }
+    }
+}
+
+
 fn main() {
     // set the FPS
     tcod::system::set_fps(LIMIT_FPS);
@@ -1353,41 +1393,5 @@ fn main() {
     };
 
     let (mut game, mut objects) = new_game(&mut tcod);
-
-    // force FOV "recompute" first time through the game loop
-    let mut previous_player_position = (-1, -1);
-
-    // the game loop!
-    while !tcod.root.window_closed() {
-        // clear the off-screen console
-        tcod.con.clear();
-
-        match input::check_for_event(input::MOUSE | input::KEY_PRESS) {
-            Some((_, Event::Mouse(m))) => tcod.mouse = m,
-            Some((_, Event::Key(k))) => tcod.key = k,
-            _ => tcod.key = Default::default(),
-        }
-
-        // render the screen
-        let fov_recompute = previous_player_position != (objects[PLAYER].pos());
-        render_all(&mut tcod, &mut game, &objects, fov_recompute);
-
-        tcod.root.flush();
-
-        // handle keys and exit game if needed
-        previous_player_position = objects[PLAYER].pos();
-        let player_action = handle_keys(&mut tcod, &mut game, &mut objects);
-        if player_action == PlayerAction::Exit {
-            break;
-        }
-
-        // let monsters take their turn
-        if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
-            for id in 0..objects.len() {
-                if id != PLAYER && objects[id].ai.is_some() {
-                    ai_take_turn(id, &tcod, &mut game, &mut objects);
-                }
-            }
-        }
-    }
+    play_game(&mut tcod, &mut game, &mut objects);  
 }

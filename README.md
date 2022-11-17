@@ -33,4 +33,6 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * Orcs and Trolls hate being killed -> -karma
   * Orcs love money (and for enough, will become non-hostile) -> +karma
   * Orcs will go for money, not you
-
+  * Gnolls will try to pick things up - things worth of value
+    * You throw an item (or money), gnolls will chase it
+    * Throw enough money (or value in objects) and a gnoll will stop being hostile permanently

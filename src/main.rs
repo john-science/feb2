@@ -1280,28 +1280,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
 }
 
 
-fn main() {
-    // set the FPS
-    tcod::system::set_fps(LIMIT_FPS);
-
-    // initialize the TCOD "Root" object
-    let root: Root = Root::initializer()
-        .font("dejavu16x16.png", FontLayout::Tcod)
-        .font_type(FontType::Greyscale)
-        .size(SCREEN_WIDTH, SCREEN_HEIGHT)
-        .title("February Second")
-        .init();
-
-    // use the TCOD "Root" object to create a mutable TCOD struct
-    let mut tcod = Tcod {
-        root,
-        con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
-        panel: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
-        fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
-        key: Default::default(),
-        mouse: Default::default(),
-    };
-
+fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
@@ -1336,14 +1315,42 @@ fn main() {
         }
     }
 
-    // force FOV "recompute" first time through the game loop
-    let mut previous_player_position = (-1, -1);
-
     // a welcome message
     game.messages.add(
         "Welcome stranger! Ascend from Purgatory, or be stuck here forever.",
         RED,
     );
+
+    return (game, objects);
+}
+
+
+fn main() {
+    // set the FPS
+    tcod::system::set_fps(LIMIT_FPS);
+
+    // initialize the TCOD "Root" object
+    let root: Root = Root::initializer()
+        .font("dejavu16x16.png", FontLayout::Tcod)
+        .font_type(FontType::Greyscale)
+        .size(SCREEN_WIDTH, SCREEN_HEIGHT)
+        .title("February Second")
+        .init();
+
+    // use the TCOD "Root" object to create a mutable TCOD struct
+    let mut tcod = Tcod {
+        root,
+        con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
+        panel: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
+        fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
+        key: Default::default(),
+        mouse: Default::default(),
+    };
+
+    let (mut game, mut objects) = new_game(&mut tcod);
+
+    // force FOV "recompute" first time through the game loop
+    let mut previous_player_position = (-1, -1);
 
     // the game loop!
     while !tcod.root.window_closed() {

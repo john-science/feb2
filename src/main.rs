@@ -545,6 +545,19 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
 
+
+    // TODO: Move NPC table to tables.rs
+    let monster_chances = &mut [  // TODO: Change name to npc_table
+        Weighted {
+            weight: 80,
+            item: "orc",
+        },
+        Weighted {
+            weight: 20,
+            item: "troll",
+        },
+    ];
+
     for _ in 0..num_monsters {
         // choose random spot for this monster
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
@@ -552,18 +565,6 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            // TODO: Move NPC table out of function.
-            // monster random table
-            let monster_chances = &mut [
-                Weighted {
-                    weight: 80,
-                    item: "orc",
-                },
-                Weighted {
-                    weight: 20,
-                    item: "troll",
-                },
-            ];
             let monster_choice = WeightedChoice::new(monster_chances);
 
             let mut monster = match monster_choice.ind_sample(&mut rand::thread_rng()) {
@@ -604,9 +605,29 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         }
     }
 
-    // TODO: This is a silly number of health potions.
     // choose random number of items
     let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
+
+    // TODO: move loot table to tables.rs
+    let item_chances = &mut [  // TODO: Change name to look_table
+        Weighted {
+            weight: 70,
+            item: Item::Heal,
+        },
+        Weighted {
+            weight: 10,
+            item: Item::Lightning,
+        },
+        Weighted {
+            weight: 10,
+            item: Item::Fireball,
+        },
+        Weighted {
+            weight:10,
+            item: Item::Confuse,
+        },
+    ];
+    let item_choice = WeightedChoice::new(item_chances);
 
     for _ in 0..num_items {
         // choose random spot for this item
@@ -615,28 +636,36 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            let dice = rand::random::<f32>();
-            let mut item = if dice < 0.7 {
-                // create a healing potion (70% chance)
-                let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);  // TODO: centralize the items
-                object.item = Some(Item::Heal);
-                object
-            } else if dice < 0.7 + 0.1 {
-                // create a lightning bolt scroll (10% chance)
-                let mut object = Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false);
-                object.item = Some(Item::Lightning);
-                object
-            } else if dice < 0.7 + 0.1 + 0.1 {  // TODO: Constants... (Or based on level design.)
-                // create a fireball scroll (10% chance)
-                let mut object = Object::new(x, y, '#', "scroll of fireball", LIGHT_YELLOW, false);
-                object.item = Some(Item::Fireball);
-                object
-            } else {
-                // create a confuse scroll (10% chance)
-                let mut object = Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false);  // TODO: Different scrolls, different colors.
-                object.item = Some(Item::Confuse);
-                object
+            let item = match item_choice.ind_sample(&mut rand::thread_rng()) {
+                Item::Heal => {
+                    // create a healing potion
+                    let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
+                    object.item = Some(Item::Heal);
+                    object
+                }
+                Item::Lightning => {
+                    // create a lightning bolt scroll
+                    let mut object =
+                        Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false);
+                    object.item = Some(Item::Lightning);
+                    object
+                }
+                Item::Fireball => {
+                    // create a fireball scroll
+                    let mut object =
+                        Object::new(x, y, '#', "scroll of fireball", LIGHT_YELLOW, false);
+                    object.item = Some(Item::Fireball);
+                    object
+                }
+                Item::Confuse => {
+                    // create a confuse scroll
+                    let mut object =
+                        Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false);
+                    object.item = Some(Item::Confuse);
+                    object
+                }
             };
+
             objects.push(item);
         }
     }

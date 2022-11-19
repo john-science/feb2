@@ -539,6 +539,9 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
 
 
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
+    use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
+
+    // TODO: Switch from "monster" to "npc".
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
 
@@ -549,33 +552,50 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            // TODO: Replace "monster" with "npc".
-            let mut monster = if rand::random::<f32>() < 0.8 {
-                // 80% chance of creating an orc
-                let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);  // TODO: centralize the monsters
-                orc.ai = Some(Ai::Basic);
-                orc.fighter = Some(Fighter {
-                    max_hp: 10,
-                    hp: 10,
-                    defense: 0,
-                    power: 3,
-                    xp: 35,
-                    on_death: DeathCallback::Monster,
-                });
-                orc
-            } else {
-                // create a troll
-                let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);  // TODO: centralize the monsters
-                troll.ai = Some(Ai::Basic);
-                troll.fighter = Some(Fighter {
-                    max_hp: 16,
-                    hp: 16,
-                    defense: 1,
-                    power: 4,
-                    xp: 100,
-                    on_death: DeathCallback::Monster,
-                });
+            // TODO: Move NPC table out of function.
+            // monster random table
+            let monster_chances = &mut [
+                Weighted {
+                    weight: 80,
+                    item: "orc",
+                },
+                Weighted {
+                    weight: 20,
+                    item: "troll",
+                },
+            ];
+            let monster_choice = WeightedChoice::new(monster_chances);
+
+            let mut monster = match monster_choice.ind_sample(&mut rand::thread_rng()) {
+                "orc" => {
+                    // create an orc
+                    let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
+                    orc.ai = Some(Ai::Basic);
+                    orc.fighter = Some(Fighter {
+                        max_hp: 10,
+                        hp: 10,
+                        defense: 0,
+                        power: 3,
+                        xp: 35,
+                        on_death: DeathCallback::Monster,
+                    });
+                    orc
+                }
+                "troll" => {
+                    // create a troll
+                    let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
+                    troll.ai = Some(Ai::Basic);
+                    troll.fighter = Some(Fighter {
+                        max_hp: 16,
+                        hp: 16,
+                        defense: 1,
+                        power: 4,
+                        xp: 100,
+                        on_death: DeathCallback::Monster,
+                    });
                 troll
+                }
+                _ => unreachable!(),
             };
 
             monster.alive = true;

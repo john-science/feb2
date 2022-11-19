@@ -1,9 +1,11 @@
 [package]
 name = "feb2"
-version = "0.10.4"
+version = "0.10.5"
 edition = "2021"
 
 [dependencies]
 rand = "0.3.9"
-tcod = { git = "https://github.com/tomassedovic/tcod-rs.git", rev = "d4ad074"}
+tcod = { git = "https://github.com/tomassedovic/tcod-rs.git", rev = "d4ad074", features = ["serialization"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 

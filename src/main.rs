@@ -207,6 +207,7 @@ struct Object {
     fighter: Option<Fighter>,
     ai: Option<Ai>,
     item: Option<Item>,
+    always_visible: bool,
 }
 
 impl Object {
@@ -222,6 +223,7 @@ impl Object {
             fighter: None,
             ai: None,
             item: None,
+            always_visible: false,
         }
     }
 
@@ -464,6 +466,7 @@ struct Game {
     map: Map,
     messages: Messages,
     inventory: Vec<Object>,
+    dungeon_level: u32,
 }
 
 
@@ -564,7 +567,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
             let dice = rand::random::<f32>();
-            let item = if dice < 0.7 {
+            let mut item = if dice < 0.7 {
                 // create a healing potion (70% chance)
                 let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);  // TODO: centralize the items
                 object.item = Some(Item::Heal);
@@ -856,10 +859,16 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 
-// TODO: Bug. I entered a game and there were 3 monsters in my room. (No monsters should spawn in FOV of the player at the Start.)
+// TODO: Bug. I entered a game and there were 3 monsters in the start room. (No monsters should spawn in FOV of the player at the Start.)
 fn make_map(objects: &mut Vec<Object>) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
+
+    // TODO: Player cannot visit old levels! OMG, this deletes everything!!!!!!
+    // Player is the first element, remove everything else.
+    // NOTE: works only when the player is the first object!
+    assert_eq!(&objects[PLAYER] as *const Object, &objects[0] as *const Object);
+    objects.truncate(1);
 
     // generate a random set of roooms
     let mut rooms = vec![];
@@ -918,7 +927,25 @@ fn make_map(objects: &mut Vec<Object>) -> Map {
         }
     }
 
+    // create stairs at the center of the last room
+    let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
+    let mut stairs = Object::new(last_room_x, last_room_y, '<', "stairs", WHITE, false);  // TODO: Flip!
+    stairs.always_visible = true;
+    objects.push(stairs);
+
     return map;
+}
+
+
+// Advance to the next level
+fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
+    game.messages.add(
+        "You descend deeper into the heart of the dungeon...",  // TODO: Flip!
+        RED,
+    );
+    game.dungeon_level += 1;
+    game.map = make_map(objects);
+    initialise_fov(tcod, &game.map);
 }
 
 
@@ -959,7 +986,10 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
     // draw all objects in the list, in correct order
     let mut to_draw: Vec<_> = objects
         .iter()
-        .filter(|o| tcod.fov.is_in_fov(o.x, o.y))
+        .filter(|o| {
+            tcod.fov.is_in_fov(o.x, o.y)
+                || (o.always_visible && game.map[o.x as usize][o.y as usize].explored)
+        })
         .collect();
     // sort so that non-blocking objects come first
     to_draw.sort_by(|o1, o2| o1.blocks.cmp(&o2.blocks));
@@ -985,6 +1015,14 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
         max_hp,
         LIGHT_RED,
         DARKER_RED,
+    );
+
+    tcod.panel.print_ex(
+        1,
+        3,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        format!("Level: {}", game.dungeon_level),  // TODO: working... levels or?
     );
 
     // display names of objects under the mouse
@@ -1242,6 +1280,17 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             return TookTurn;
         }
 
+        // go down stairs, if the player is on them
+        (Key { code: Text, .. }, "<", true) => {  // TODO: Flip!
+            let player_on_stairs = objects
+                .iter()
+                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
+            if player_on_stairs {
+                next_level(tcod, game, objects);
+            }
+            return DidntTakeTurn;
+        }
+
         // show the inventory
         (Key { code: Text, .. }, "i", true) => {
             // show the inventory: if an item is selected, use it
@@ -1352,6 +1401,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         map: make_map(&mut objects),
         messages: Messages::new(),
         inventory: vec![],
+        dungeon_level: 1,
     };
 
     initialise_fov(tcod, &game.map);

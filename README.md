@@ -36,3 +36,5 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * Gnolls will try to pick things up - things worth of value
     * You throw an item (or money), gnolls will chase it
     * Throw enough money (or value in objects) and a gnoll will stop being hostile permanently
+* The game should be deterministic, so each pass through looks the same.
+

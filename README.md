@@ -40,4 +40,6 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * Starving Ghoul - Starts at low health and attacks until killed or healed
   * Vampires and Werewolves - Can be killed or Cured.
 * The game should be deterministic, so each pass through looks the same.
-
+  * Each game should probably have one random seed.
+* You will need to forgo all material possessions to ascend.
+  * You need to drop all items to go up the final staircase.

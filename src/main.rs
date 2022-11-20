@@ -69,6 +69,8 @@ const PLAYER: usize = 0;
 
 // TODO: Change "monster" to "npc"
 // TODO: Change "dungeon" to "purgatory"
+// TODO: Break this into multiple files.
+// TODO: The color of potions, or maybe the font, is hard to read.
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -95,11 +97,39 @@ enum Item {
     Lightning,  // TODO: LightningScroll
     Confuse,  // TODO: ConfuseScroll
     Fireball,  // TODO: FireballScroll
+    Equipment,
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// An object that can be equipped, by the player or NPCs.
+struct Equipment {
+    slot: Slot,
+    equipped: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+enum Slot {
+    LeftHand,
+    RightHand,
+    Head,
+}
+
+
+impl std::fmt::Display for Slot {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Slot::LeftHand => write!(f, "left hand"),
+            Slot::RightHand => write!(f, "right hand"),
+            Slot::Head => write!(f, "head"),
+        }
+    }
 }
 
 
 enum UseResult {
     UsedUp,
+    UsedAndKept,
     Cancelled,
 }
 
@@ -151,12 +181,12 @@ impl Messages {
         Self { messages: vec![] }
     }
 
-    /// add the new message as a tuple, with the text and the color
+    // add the new message as a tuple, with the text and the color
     pub fn add<T: Into<String>>(&mut self, message: T, color: Color) {
         self.messages.push((message.into(), color));
     }
 
-    /// Create a `DoubleEndedIterator` over the messages
+    // Create a `DoubleEndedIterator` over the messages
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &(String, Color)> {
         self.messages.iter()
     }
@@ -223,7 +253,7 @@ struct Fighter {
 
 // This is a generic object: the player, a monster, an item, the stairs...
 // It's represented by a character on screen (unless it's in an inventory).
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Object {
     x: i32,
     y: i32,
@@ -235,6 +265,7 @@ struct Object {
     fighter: Option<Fighter>,
     ai: Option<Ai>,
     item: Option<Item>,
+    equipment: Option<Equipment>,
     always_visible: bool,
     level: i32,
 }
@@ -252,6 +283,7 @@ impl Object {
             fighter: None,
             ai: None,
             item: None,
+            equipment: None,
             always_visible: false,
             level: 1,  // TODO: Just start counting at zero?
         }
@@ -272,7 +304,7 @@ impl Object {
         self.y = y;
     }
 
-    /// return the distance to another object
+    // return the distance to another object
     pub fn distance_to(&self, other: &Object) -> f32 {
         let dx = other.x - self.x;
         let dy = other.y - self.y;
@@ -342,6 +374,94 @@ impl Object {
     pub fn distance(&self, x: i32, y: i32) -> f32 {
         (((x - self.x).pow(2) + (y - self.y).pow(2)) as f32).sqrt()
     }
+
+    // TODO: NPCs should be able to have equipment.
+    // Player equips an object and gets a message
+    pub fn equip(&mut self, messages: &mut Messages) {
+        if self.item.is_none() {
+            messages.add(
+                format!("Can't equip {:?} because it's not an Item.", self),
+                RED,
+            );
+            return;
+        };
+        if let Some(ref mut equipment) = self.equipment {
+            if !equipment.equipped {
+                equipment.equipped = true;
+                messages.add(
+                    format!("Equipped {} on {}.", self.name, equipment.slot),
+                    LIGHT_GREEN,
+                );
+            }
+        } else {
+            messages.add(
+                format!("Can't equip {:?} because it's not an Equipment.", self),
+                RED,
+            );
+        }
+    }
+
+    // Player dequips an object and gets a message
+    pub fn dequip(&mut self, messages: &mut Messages) {
+        if self.item.is_none() {
+            messages.add(
+                format!("Can't dequip {:?} because it's not an Item.", self),
+                RED,
+            );
+            return;
+        };
+        if let Some(ref mut equipment) = self.equipment {
+            if equipment.equipped {
+                equipment.equipped = false;
+                messages.add(
+                    format!("Dequipped {} from {}.", self.name, equipment.slot),
+                    LIGHT_YELLOW,
+                );
+            }
+        } else {
+            messages.add(
+                format!("Can't dequip {:?} because it's not an Equipment.", self),
+                RED,
+            );
+        }
+    }
+}
+
+
+fn get_equipped_in_slot(slot: Slot, inventory: &[Object]) -> Option<usize> {
+    for (inventory_id, item) in inventory.iter().enumerate() {
+        if item
+            .equipment
+            .as_ref()
+            .map_or(false, |e| e.equipped && e.slot == slot)
+        {
+            return Some(inventory_id);
+        }
+    }
+    return None;
+}
+
+
+fn toggle_equipment(
+    inventory_id: usize,
+    _tcod: &mut Tcod,
+    game: &mut Game,
+    _objects: &mut [Object],
+) -> UseResult {
+    let equipment = match game.inventory[inventory_id].equipment {
+        Some(equipment) => equipment,
+        None => return UseResult::Cancelled,
+    };
+    if equipment.equipped {
+        game.inventory[inventory_id].dequip(&mut game.messages);
+    } else {
+        // if the slot is already being used, dequip whatever is there first
+        if let Some(current) = get_equipped_in_slot(equipment.slot, &game.inventory) {
+            game.inventory[current].dequip(&mut game.messages);
+        }
+        game.inventory[inventory_id].equip(&mut game.messages);
+    }
+    UseResult::UsedAndKept
 }
 
 
@@ -470,7 +590,7 @@ impl Tile {
 }
 
 
-/// A rectangle on the map, used to characterise a room.
+// A rectangle on the map, used to characterise a room.
 #[derive(Clone, Copy, Debug)]
 struct Rect {
     x1: i32,
@@ -667,6 +787,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // TODO: move loot table to tables.rs
     // item random table
     let item_chances = &mut [
+        Weighted {weight: 1000, item: Item::Equipment},  // TODO: Just for testing Equipment.
         // healing potion always shows up, even if all other items have 0 chance
         Weighted {
             weight: 35,
@@ -716,6 +837,13 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
             let item = match item_choice.ind_sample(&mut rand::thread_rng()) {
+                Item::Equipment => {
+                    // create a sword
+                    let mut object = Object::new(x, y, '/', "sword", SKY, false);
+                    object.item = Some(Item::Equipment);
+                    object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand});
+                    object
+                }
                 Item::Heal => {
                     // create a healing potion
                     let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
@@ -752,7 +880,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
 
 
-// TODO: Some items should stack, like health potions, and definitely money.
+// TODO: Some items should stack, like health potions, and money.
 // add to the player's inventory and remove from the map
 fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
     if game.inventory.len() >= 26 {
@@ -773,6 +901,9 @@ fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
 
 fn drop_item(inventory_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
     let mut item = game.inventory.remove(inventory_id);
+    if item.equipment.is_some() {
+        item.dequip(&mut game.messages);
+    }
     item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
     game.messages.add(format!("You dropped a {}.", item.name), YELLOW);
     objects.push(item);
@@ -790,12 +921,14 @@ fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut
             Lightning => cast_lightning,
             Confuse => cast_confuse,
             Fireball => cast_fireball,
+            Equipment => toggle_equipment,
         };
         match on_use(inventory_id, tcod, game, objects) {
             UseResult::UsedUp => {
                 // destroy after use, unless it was cancelled for some reason
                 game.inventory.remove(inventory_id);
             }
+            UseResult::UsedAndKept => {} // do nothing
             UseResult::Cancelled => {
                 game.messages.add("Cancelled", WHITE);
             }
@@ -1037,7 +1170,18 @@ fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option
     let options = if inventory.len() == 0 {
         vec!["Inventory is empty.".into()]
     } else {
-        inventory.iter().map(|item| item.name.clone()).collect()
+        inventory
+            .iter()
+            .map(|item| {
+                // show additional information, in case it's equipped
+                match item.equipment {
+                    Some(equipment) if equipment.equipped => {
+                        format!("{} (on {})", item.name, equipment.slot)
+                    }
+                    _ => item.name.clone(),
+                }
+            })
+            .collect()
     };
 
     let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
@@ -1300,8 +1444,8 @@ fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects: &mu
 }
 
 
-/// Mutably borrow two *separate* elements from the given slice.
-/// Panics when the indexes are equal or out of bounds.
+// Mutably borrow two *separate* elements from the given slice.
+// Panics when the indexes are equal or out of bounds.
 fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut T, &mut T) {
     assert!(first_index != second_index);
     let split_at_index = cmp::max(first_index, second_index);

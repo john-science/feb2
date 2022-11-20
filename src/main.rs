@@ -67,7 +67,6 @@ const LEVEL_SCREEN_WIDTH: i32 = 40;
 const PLAYER: usize = 0;
 
 
-// TODO: Change "monster" to "npc"
 // TODO: Change "dungeon" to "purgatory"
 // TODO: Break this into multiple files.
 // TODO: The color of potions, or maybe the font, is hard to read.
@@ -159,7 +158,7 @@ fn from_dungeon_level(table: &[Transition], level: u32) -> u32 {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 enum DeathCallback {
     Player,
-    Monster,
+    Npc,
 }
 
 
@@ -168,7 +167,7 @@ impl DeathCallback {
         use DeathCallback::*;
         let callback = match self {
             Player => player_death,
-            Monster => monster_death,
+            Npc => npc_death,
         };
         callback(object, game);
     }
@@ -244,7 +243,7 @@ fn render_bar(
 }
 
 
-// combat-related properties and methods (monster, player, NPC).
+// combat-related properties and methods (npc, player, NPC).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 struct Fighter {
     hp: i32,  // TODO: u32?
@@ -256,7 +255,7 @@ struct Fighter {
 }
 
 
-// This is a generic object: the player, a monster, an item, the stairs...
+// This is a generic object: the player, a npc, an item, the stairs...
 // It's represented by a character on screen (unless it's in an inventory).
 #[derive(Debug, Serialize, Deserialize)]
 struct Object {
@@ -515,7 +514,7 @@ fn toggle_equipment(
 
 
 // find closest enemy, up to a maximum range, and in the player's FOV
-fn closest_monster(tcod: &Tcod, objects: &[Object], max_range: i32) -> Option<usize> {
+fn closest_npc(tcod: &Tcod, objects: &[Object], max_range: i32) -> Option<usize> {
     let mut closest_enemy = None;
     let mut closest_dist = (max_range + 1) as f32; // start with (slightly more than) maximum range
 
@@ -541,18 +540,18 @@ fn closest_monster(tcod: &Tcod, objects: &[Object], max_range: i32) -> Option<us
 // NOTE: This expects only the player to cast lightning
 fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
     // find closest enemy (inside a maximum range and damage it)
-    let monster_id = closest_monster(tcod, objects, LIGHTNING_RANGE);
-    if let Some(monster_id) = monster_id {
+    let npc_id = closest_npc(tcod, objects, LIGHTNING_RANGE);
+    if let Some(npc_id) = npc_id {
         // zap it!
         game.messages.add(
             format!(
                 "A lightning bolt strikes the {} with a loud thunder! \
                  The damage is {} hit points.",
-                objects[monster_id].name, LIGHTNING_DAMAGE
+                objects[npc_id].name, LIGHTNING_DAMAGE
             ),
             LIGHT_BLUE,
         );
-        if let Some(xp) = objects[monster_id].take_damage(LIGHTNING_DAMAGE, game) {
+        if let Some(xp) = objects[npc_id].take_damage(LIGHTNING_DAMAGE, game) {
             objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
         }
         return UseResult::UsedUp;
@@ -732,9 +731,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
 
     // TODO: Move NPC table to tables.rs
-    // TODO: Switch from "monster" to "npc
-    // maximum number of monsters per room
-    let max_monsters = from_dungeon_level(
+    // TODO: Switch from "npc" to "npc
+    // maximum number of npcs per room
+    let max_npcs = from_dungeon_level(
         &[
             Transition { level: 1, value: 2 },
             Transition { level: 4, value: 3 },
@@ -743,10 +742,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         level,
     );
 
-    // choose random number of monsters
-    let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
+    // choose random number of npcs
+    let num_npcs = rand::thread_rng().gen_range(0, max_npcs + 1);
 
-    // monster random table
+    // npc random table
     let troll_chance = from_dungeon_level(
         &[
             Transition {
@@ -766,7 +765,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     );
 
     // TODO: Move NPC table to tables.rs
-    let monster_chances = &mut [  // TODO: Change name to npc_table
+    let npc_chances = &mut [  // TODO: Change name to npc_table
         Weighted {
             weight: 80,
             item: "orc",  // TODO: const NPC_ORC: i32 = 0;
@@ -777,16 +776,16 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         },
     ];
 
-    for _ in 0..num_monsters {
-        // choose random spot for this monster
+    for _ in 0..num_npcs {
+        // choose random spot for this npc
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            let monster_choice = WeightedChoice::new(monster_chances);
+            let npc_choice = WeightedChoice::new(npc_chances);
 
-            let mut monster = match monster_choice.ind_sample(&mut rand::thread_rng()) {
+            let mut npc = match npc_choice.ind_sample(&mut rand::thread_rng()) {
                 "orc" => {
                     // create an orc
                     let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
@@ -797,7 +796,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                         base_defense: 0,
                         base_power: 4,
                         xp: 35,
-                        on_death: DeathCallback::Monster,
+                        on_death: DeathCallback::Npc,
                     });
                     orc
                 }
@@ -811,16 +810,16 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                         base_defense: 2,
                         base_power: 8,
                         xp: 100,
-                        on_death: DeathCallback::Monster,
+                        on_death: DeathCallback::Npc,
                     });
                 troll
                 }
                 _ => unreachable!(),
             };
 
-            monster.alive = true;
-            monster.ai = Some(Ai::Basic);
-            objects.push(monster);
+            npc.alive = true;
+            npc.ai = Some(Ai::Basic);
+            objects.push(npc);
         }
     }
 
@@ -1024,8 +1023,8 @@ fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut
 
 
 // TODO: I'd like to be able to tab-select too. And auto-select closest.
-// returns a clicked monster inside FOV up to a range, or None if right-clicked
-fn target_monster(
+// returns a clicked npc inside FOV up to a range, or None if right-clicked
+fn target_npc(
     tcod: &mut Tcod,
     game: &mut Game,
     objects: &[Object],
@@ -1034,7 +1033,7 @@ fn target_monster(
     loop {
         match target_tile(tcod, game, objects, max_range) {
             Some((x, y)) => {
-                // return the first clicked monster, otherwise continue looping
+                // return the first clicked npc, otherwise continue looping
                 for (id, obj) in objects.iter().enumerate() {
                     if obj.pos() == (x, y) && obj.fighter.is_some() && id != PLAYER {
                         return Some(id);
@@ -1076,19 +1075,19 @@ fn cast_confuse(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects:
         "Left-click an enemy to confuse it, or right-click to cancel.",
         LIGHT_CYAN,
     );
-    let monster_id = target_monster(tcod, game, objects, Some(CONFUSE_RANGE as f32));
-    if let Some(monster_id) = monster_id {
-        let old_ai = objects[monster_id].ai.take().unwrap_or(Ai::Basic);
-        // replace the monster's AI with a "confused" one; after
+    let npc_id = target_npc(tcod, game, objects, Some(CONFUSE_RANGE as f32));
+    if let Some(npc_id) = npc_id {
+        let old_ai = objects[npc_id].ai.take().unwrap_or(Ai::Basic);
+        // replace the npc's AI with a "confused" one; after
         // some turns it will restore the old AI
-        objects[monster_id].ai = Some(Ai::Confused {
+        objects[npc_id].ai = Some(Ai::Confused {
             previous_ai: Box::new(old_ai),
             num_turns: CONFUSE_NUM_TURNS,
         });
         game.messages.add(
             format!(
                 "The eyes of {} look vacant, as he starts to stumble around!",
-                objects[monster_id].name
+                objects[npc_id].name
             ),
             LIGHT_GREEN,
         );
@@ -1296,7 +1295,7 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 
-// TODO: Bug. I entered a game and there were 3 monsters in the start room. (No monsters should spawn in FOV of the player at the Start.)
+// TODO: Bug. I entered a game and there were 3 npcs in the start room. (No npcs should spawn in FOV of the player at the Start.)
 fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
@@ -1355,7 +1354,7 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
                     create_h_tunnel(prev_x, new_x, new_y, &mut map);
                 }
 
-                // add some content to this room, such as monsters
+                // add some content to this room, such as npcs
                 place_objects(new_room, &map, objects, level);
             }
 
@@ -1546,18 +1545,18 @@ fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut
 }
 
 
-fn ai_basic(monster_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) -> Ai {
-    // a basic monster takes its turn. If you can see it, it can see you
-    let (monster_x, monster_y) = objects[monster_id].pos();
-    if tcod.fov.is_in_fov(monster_x, monster_y) {
-        if objects[monster_id].distance_to(&objects[PLAYER]) >= 2.0 {
+fn ai_basic(npc_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) -> Ai {
+    // a basic npc takes its turn. If you can see it, it can see you
+    let (npc_x, npc_y) = objects[npc_id].pos();
+    if tcod.fov.is_in_fov(npc_x, npc_y) {
+        if objects[npc_id].distance_to(&objects[PLAYER]) >= 2.0 {
             // move towards player if far away
             let (player_x, player_y) = objects[PLAYER].pos();
-            move_towards(monster_id, player_x, player_y, &game.map, objects);
+            move_towards(npc_id, player_x, player_y, &game.map, objects);
         } else if objects[PLAYER].fighter.map_or(false, |f| f.hp > 0) {
             // close enough, attack! (if the player is still alive.)
-            let (monster, player) = mut_two(monster_id, PLAYER, objects);
-            monster.attack(player, game);
+            let (npc, player) = mut_two(npc_id, PLAYER, objects);
+            npc.attack(player, game);
         }
     }
     Ai::Basic
@@ -1565,7 +1564,7 @@ fn ai_basic(monster_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Obje
 
 
 fn ai_confused(
-    monster_id: usize,
+    npc_id: usize,
     _tcod: &Tcod,
     game: &mut Game,
     objects: &mut [Object],
@@ -1576,7 +1575,7 @@ fn ai_confused(
         // still confused ...
         // move in a random direction, and decrease the number of turns confused
         move_by(
-            monster_id,
+            npc_id,
             rand::thread_rng().gen_range(-1, 2),
             rand::thread_rng().gen_range(-1, 2),
             &game.map,
@@ -1589,7 +1588,7 @@ fn ai_confused(
     } else {
         // restore the previous AI (this one will be deleted)
         game.messages.add(
-            format!("The {} is no longer confused!", objects[monster_id].name),
+            format!("The {} is no longer confused!", objects[npc_id].name),
             RED,
         );
         *previous_ai
@@ -1597,17 +1596,17 @@ fn ai_confused(
 }
 
 
-fn ai_take_turn(monster_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) {
+fn ai_take_turn(npc_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) {
     use Ai::*;
-    if let Some(ai) = objects[monster_id].ai.take() {
+    if let Some(ai) = objects[npc_id].ai.take() {
         let new_ai = match ai {
-            Basic => ai_basic(monster_id, tcod, game, objects),
+            Basic => ai_basic(npc_id, tcod, game, objects),
             Confused {
                 previous_ai,
                 num_turns,
-            } => ai_confused(monster_id, tcod, game, objects, previous_ai, num_turns),
+            } => ai_confused(npc_id, tcod, game, objects, previous_ai, num_turns),
         };
-        objects[monster_id].ai = Some(new_ai);
+        objects[npc_id].ai = Some(new_ai);
     }
 }
 
@@ -1645,24 +1644,24 @@ fn player_death(player: &mut Object, game: &mut Game) {
 }
 
 
-// TODO: This doesn't handle one monster killing another.
-fn monster_death(monster: &mut Object, game: &mut Game) {
+// TODO: This doesn't handle one npc killing another.
+fn npc_death(npc: &mut Object, game: &mut Game) {
     // transform it into a nasty corpse! it doesn't block, can't be
     // attacked and doesn't move
     game.messages.add(
         format!(
             "{} is dead! You gain {} experience points.",  // TODO: It's not death.
-            monster.name,
-            monster.fighter.unwrap().xp
+            npc.name,
+            npc.fighter.unwrap().xp
         ),
         ORANGE,
     );
-    monster.chr = '%';
-    monster.color = DARK_RED;
-    monster.blocks = false;
-    monster.fighter = None;
-    monster.ai = None;
-    monster.name = format!("remains of {}", monster.name);
+    npc.chr = '%';
+    npc.color = DARK_RED;
+    npc.blocks = false;
+    npc.fighter = None;
+    npc.ai = None;
+    npc.name = format!("remains of {}", npc.name);
 }
 
 
@@ -1941,7 +1940,7 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
             break;
         }
 
-        // let monsters take their turn
+        // let npcs take their turn
         if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
             for id in 0..objects.len() {
                 if id != PLAYER && objects[id].ai.is_some() {

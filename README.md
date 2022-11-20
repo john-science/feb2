@@ -37,5 +37,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
     * You throw an item (or money), gnolls will chase it
     * Throw enough money (or value in objects) and a gnoll will stop being hostile permanently
   * Maybe everything is a "demon" or "devil" etc, until high karma, then they are all "angels" etc.
+  * Starving Ghoul - Starts at low health and attacks until killed or healed
+  * Vampires and Werewolves - Can be killed or Cured.
 * The game should be deterministic, so each pass through looks the same.
 

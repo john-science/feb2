@@ -47,16 +47,16 @@ const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
 const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
-const MAX_ROOM_MONSTERS: i32 = 3;
-const MAX_ROOM_ITEMS: i32 = 2;
 const INVENTORY_WIDTH: i32 = 50;
-const HEAL_AMOUNT: i32 = 4;
-const LIGHTNING_DAMAGE: i32 = 40;  // TODO: Should depend on skills.
+
+// TODO: Should depend on skills
+const HEAL_AMOUNT: i32 = 40;
+const LIGHTNING_DAMAGE: i32 = 40;
 const LIGHTNING_RANGE: i32 = 5;
 const CONFUSE_RANGE: i32 = 8;
 const CONFUSE_NUM_TURNS: i32 = 10;
 const FIREBALL_RADIUS: i32 = 3;
-const FIREBALL_DAMAGE: i32 = 12;  // TODO: Should depend on skills.
+const FIREBALL_DAMAGE: i32 = 25;
 
 // experience and level-ups (BASE + level * FACTOR)
 const LEVEL_UP_BASE: i32 = 200;
@@ -65,6 +65,10 @@ const LEVEL_SCREEN_WIDTH: i32 = 40;
 
 // player will always be the first object
 const PLAYER: usize = 0;
+
+
+// TODO: Change "monster" to "npc"
+// TODO: Change "dungeon" to "purgatory"
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -97,6 +101,23 @@ enum Item {
 enum UseResult {
     UsedUp,
     Cancelled,
+}
+
+
+struct Transition {
+    level: u32,
+    value: u32,
+}
+
+
+// Returns a value that depends on level. the table specifies what
+// value occurs after each level, default is 0.
+fn from_dungeon_level(table: &[Transition], level: u32) -> u32 {
+    table
+        .iter()
+        .rev()
+        .find(|transition| level >= transition.level)
+        .map_or(0, |transition| transition.value)
 }
 
 
@@ -232,7 +253,7 @@ impl Object {
             ai: None,
             item: None,
             always_visible: false,
-            level: 1,
+            level: 1,  // TODO: Just start counting at zero?
         }
     }
 
@@ -538,22 +559,51 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
 }
 
 
-fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
+fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
 
-    // TODO: Switch from "monster" to "npc".
-    // choose random number of monsters
-    let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
+    // TODO: Move NPC table to tables.rs
+    // TODO: Switch from "monster" to "npc
+    // maximum number of monsters per room
+    let max_monsters = from_dungeon_level(
+        &[
+            Transition { level: 1, value: 2 },
+            Transition { level: 4, value: 3 },
+            Transition { level: 6, value: 5 },
+        ],
+        level,
+    );
 
+    // choose random number of monsters
+    let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
+
+    // monster random table
+    let troll_chance = from_dungeon_level(
+        &[
+            Transition {
+                level: 3,
+                value: 15,
+            },
+            Transition {
+                level: 5,
+                value: 30,
+            },
+            Transition {
+                level: 7,
+                value: 60,
+            },
+        ],
+        level,
+    );
 
     // TODO: Move NPC table to tables.rs
     let monster_chances = &mut [  // TODO: Change name to npc_table
         Weighted {
             weight: 80,
-            item: "orc",
+            item: "orc",  // TODO: const NPC_ORC: i32 = 0;
         },
         Weighted {
-            weight: 20,
+            weight: troll_chance,
             item: "troll",
         },
     ];
@@ -573,10 +623,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                     let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
                     orc.ai = Some(Ai::Basic);
                     orc.fighter = Some(Fighter {
-                        max_hp: 10,
-                        hp: 10,
+                        max_hp: 20,
+                        hp: 20,
                         defense: 0,
-                        power: 3,
+                        power: 4,
                         xp: 35,
                         on_death: DeathCallback::Monster,
                     });
@@ -587,10 +637,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                     let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
                     troll.ai = Some(Ai::Basic);
                     troll.fighter = Some(Fighter {
-                        max_hp: 16,
-                        hp: 16,
-                        defense: 1,
-                        power: 4,
+                        max_hp: 30,
+                        hp: 30,
+                        defense: 2,
+                        power: 8,
                         xp: 100,
                         on_death: DeathCallback::Monster,
                     });
@@ -605,29 +655,58 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         }
     }
 
-    // choose random number of items
-    let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
+    // maximum number of items per room
+    let max_items = from_dungeon_level(
+        &[
+            Transition { level: 1, value: 1 },
+            Transition { level: 4, value: 2 },
+        ],
+        level,
+    );
 
     // TODO: move loot table to tables.rs
-    let item_chances = &mut [  // TODO: Change name to look_table
+    // item random table
+    let item_chances = &mut [
+        // healing potion always shows up, even if all other items have 0 chance
         Weighted {
-            weight: 70,
+            weight: 35,
             item: Item::Heal,
         },
         Weighted {
-            weight: 10,
+            weight: from_dungeon_level(
+                &[Transition {
+                    level: 4,
+                    value: 25,
+                }],
+                level,
+            ),
             item: Item::Lightning,
         },
         Weighted {
-            weight: 10,
+            weight: from_dungeon_level(
+                &[Transition {
+                    level: 6,
+                    value: 25,
+                }],
+                level,
+            ),
             item: Item::Fireball,
         },
         Weighted {
-            weight:10,
+            weight: from_dungeon_level(
+                &[Transition {
+                    level: 2,
+                    value: 10,
+                }],
+                level,
+            ),
             item: Item::Confuse,
         },
     ];
     let item_choice = WeightedChoice::new(item_chances);
+
+    // choose random number of items
+    let num_items = rand::thread_rng().gen_range(0, max_items + 1);
 
     for _ in 0..num_items {
         // choose random spot for this item
@@ -986,7 +1065,7 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 
 
 // TODO: Bug. I entered a game and there were 3 monsters in the start room. (No monsters should spawn in FOV of the player at the Start.)
-fn make_map(objects: &mut Vec<Object>) -> Map {
+fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
 
@@ -1045,7 +1124,7 @@ fn make_map(objects: &mut Vec<Object>) -> Map {
                 }
 
                 // add some content to this room, such as monsters
-                place_objects(new_room, &map, objects);
+                place_objects(new_room, &map, objects, level);
             }
 
             // finally, append the new room to the list
@@ -1070,7 +1149,7 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         RED,
     );
     game.dungeon_level += 1;
-    game.map = make_map(objects);
+    game.map = make_map(objects, game.dungeon_level);
     initialise_fov(tcod, &game.map);
 }
 
@@ -1549,10 +1628,10 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter {
-        max_hp: 30,
-        hp: 30,
-        defense: 2,
-        power: 5,
+        max_hp: 100,
+        hp: 100,
+        defense: 1,
+        power: 4,
         xp: 0,
         on_death: DeathCallback::Player,
     });
@@ -1563,7 +1642,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     // make a Map of room objects
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects),
+        map: make_map(&mut objects, 1),
         messages: Messages::new(),
         inventory: vec![],
         dungeon_level: 1,

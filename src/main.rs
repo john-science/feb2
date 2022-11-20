@@ -1,16 +1,23 @@
 /*
 February Second
  */
-use rand::Rng;
-use serde::{Deserialize, Serialize};
+// Import Std Libs
 use std::cmp;
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
+
+// Import Third-Party
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 use tcod::colors::*;
 use tcod::console::*;
 use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
+
+// Import Locally
+pub mod items;
+use items::Item;
 
 // actual size of the window
 const SCREEN_WIDTH: i32 = 80;
@@ -87,17 +94,6 @@ enum Ai {
         previous_ai: Box<Ai>,
         num_turns: i32,
     },
-}
-
-
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-enum Item {
-    Heal,  // TODO: HealPot
-    Lightning,  // TODO: LightningScroll
-    Confuse,  // TODO: ConfuseScroll
-    Fireball,  // TODO: FireballScroll
-    Sword,
-    Shield,
 }
 
 
@@ -1665,8 +1661,6 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
 
 
 // TODO: Fullscreen isn't working.
-// TODO: Need a wait button (.)
-// TODO: Need a long wait button (10/100 turns)
 fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
     use tcod::input::KeyCode::*;
     use PlayerAction::*;
@@ -1739,7 +1733,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
         }
 
         // TODO: Maybe make an XP bar?
-        // TODO: Combine inventory and character stuff
+        // TODO: Combine inventory and character stuff?
         (Key { code: Text, .. }, "c", true) => {
             // show character information
             let player = &objects[PLAYER];

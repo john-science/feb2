@@ -43,7 +43,7 @@ const COLOR_DARK_GROUND: Color = Color { r: 81, g: 44, b: 15 };
 const COLOR_LIGHT_WALL: Color = Color { r: 30, g: 16, b: 5 };
 const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
 
-// parameters for dungeon generator
+// parameters for map generator
 const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
@@ -67,7 +67,6 @@ const LEVEL_SCREEN_WIDTH: i32 = 40;
 const PLAYER: usize = 0;
 
 
-// TODO: Change "dungeon" to "purgatory"
 // TODO: Break this into multiple files.
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
@@ -146,7 +145,7 @@ struct Transition {
 
 // Returns a value that depends on level. the table specifies what
 // value occurs after each level, default is 0.
-fn from_dungeon_level(table: &[Transition], level: u32) -> u32 {
+fn from_map_level(table: &[Transition], level: u32) -> u32 {
     table
         .iter()
         .rev()
@@ -682,7 +681,7 @@ struct Game {
     map: Map,
     messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
     inventory: Vec<Object>,
-    dungeon_level: u32,
+    map_level: u32,
 }
 
 
@@ -733,7 +732,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // TODO: Move NPC table to tables.rs
     // TODO: Switch from "npc" to "npc
     // maximum number of npcs per room
-    let max_npcs = from_dungeon_level(
+    let max_npcs = from_map_level(
         &[
             Transition { level: 1, value: 2 },
             Transition { level: 4, value: 3 },
@@ -746,7 +745,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     let num_npcs = rand::thread_rng().gen_range(0, max_npcs + 1);
 
     // npc random table
-    let troll_chance = from_dungeon_level(
+    let troll_chance = from_map_level(
         &[
             Transition {
                 level: 3,
@@ -824,7 +823,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     }
 
     // maximum number of items per room
-    let max_items = from_dungeon_level(
+    let max_items = from_map_level(
         &[
             Transition { level: 1, value: 1 },
             Transition { level: 4, value: 2 },
@@ -836,11 +835,11 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // item random table
     let item_chances = &mut [
         Weighted {
-            weight: from_dungeon_level(&[Transition { level: 4, value: 5 }], level),
+            weight: from_map_level(&[Transition { level: 4, value: 5 }], level),
             item: Item::Sword,
         },
         Weighted {
-            weight: from_dungeon_level(
+            weight: from_map_level(
                 &[Transition {
                     level: 8,
                     value: 15,
@@ -854,7 +853,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
             item: Item::Heal,
         },
         Weighted {
-            weight: from_dungeon_level(
+            weight: from_map_level(
                 &[Transition {
                     level: 4,
                     value: 25,
@@ -864,7 +863,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
             item: Item::Lightning,
         },
         Weighted {
-            weight: from_dungeon_level(
+            weight: from_map_level(
                 &[Transition {
                     level: 6,
                     value: 25,
@@ -874,7 +873,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
             item: Item::Fireball,
         },
         Weighted {
-            weight: from_dungeon_level(
+            weight: from_map_level(
                 &[Transition {
                     level: 2,
                     value: 10,
@@ -1376,11 +1375,11 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
     game.messages.add(
-        "You descend deeper into the heart of the dungeon...",  // TODO: Flip!
+        "You descend deeper into Purgatory...",  // TODO: Flip!
         RED,
     );
-    game.dungeon_level += 1;
-    game.map = make_map(objects, game.dungeon_level);
+    game.map_level += 1;
+    game.map = make_map(objects, game.map_level);
     initialise_fov(tcod, &game.map);
 }
 
@@ -1458,7 +1457,7 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
         3,
         BackgroundFlag::None,
         TextAlignment::Left,
-        format!("Level: {}", game.dungeon_level),  // TODO: working... levels or?
+        format!("Level: {}", game.map_level),  // TODO: working... levels or?
     );
 
     // display names of objects under the mouse
@@ -1866,7 +1865,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     player.fighter = Some(Fighter {
         base_max_hp: 100,  // TODO: These numbers seem like they should be constants, or config?
         hp: 100,
-        base_defense: 1,
+        base_defense: 2,
         base_power: 2,
         xp: 0,
         on_death: DeathCallback::Player,
@@ -1881,7 +1880,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         map: make_map(&mut objects, 1),
         messages: Messages::new(),
         inventory: vec![],
-        dungeon_level: 1,
+        map_level: 1,
     };
 
     // initial equipment: a dagger

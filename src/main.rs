@@ -19,6 +19,7 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 mod items;
 mod messages;
 use items::Item;
+use items::Slot;
 use messages::Messages;
 
 // actual size of the window
@@ -107,24 +108,6 @@ struct Equipment {
     max_hp_bonus: i32,
     defense_bonus: i32,
     power_bonus: i32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-enum Slot {
-    LeftHand,
-    RightHand,
-    Head,
-}
-
-
-impl std::fmt::Display for Slot {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            Slot::LeftHand => write!(f, "left hand"),
-            Slot::RightHand => write!(f, "right hand"),
-            Slot::Head => write!(f, "head"),
-        }
-    }
 }
 
 

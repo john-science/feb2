@@ -50,3 +50,13 @@ pub struct Equipment {
     pub defense_bonus: i32,
     pub power_bonus: i32,
 }
+
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum Ai {
+    Basic,
+    Confused {
+        previous_ai: Box<Ai>,
+        num_turns: i32,
+    },
+}

@@ -16,8 +16,12 @@ use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
+mod map;
 mod items;
 mod messages;
+use map::Map;
+use map::Tile;
+use items::Ai;
 use items::Equipment;
 use items::Item;
 use items::Slot;
@@ -89,16 +93,6 @@ enum PlayerAction {
     TookTurn,
     DidntTakeTurn,
     Exit,
-}
-
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-enum Ai {
-    Basic,
-    Confused {
-        previous_ai: Box<Ai>,
-        num_turns: i32,
-    },
 }
 
 
@@ -552,33 +546,6 @@ fn cast_fireball(
 }
 
 
-// A tile of the map and its properties
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-struct Tile {
-    blocked: bool,
-    explored: bool,
-    block_sight: bool,
-}
-
-impl Tile {
-    pub fn empty() -> Self {
-        Tile {
-            blocked: false,
-            explored: false,
-            block_sight: false,
-        }
-    }
-
-    pub fn wall() -> Self {
-        Tile {
-            blocked: true,
-            explored: false,
-            block_sight: true,
-        }
-    }
-}
-
-
 // A rectangle on the map, used to characterise a room.
 #[derive(Clone, Copy, Debug)]
 struct Rect {
@@ -613,10 +580,6 @@ impl Rect {
             && (self.y2 >= other.y1)
     }
 }
-
-
-// NOTE: Alternatively, this could be a 1D vector of length HEIGHTxWIDTH
-type Map = Vec<Vec<Tile>>;
 
 #[derive(Serialize, Deserialize)]
 struct Game {
@@ -1806,7 +1769,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         base_max_hp: 100,  // TODO: These numbers seem like they should be constants, or config?
         hp: 100,
         base_defense: 2,
-        base_power: 2,
+        base_power: 3,
         xp: 0,
         on_death: DeathCallback::Player,
     });

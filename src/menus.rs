@@ -5,10 +5,23 @@
 use serde::{Deserialize, Serialize};
 use tcod::colors::*;
 use tcod::console::*;
+use tcod::input::{Key, Mouse};
+use tcod::map::{Map as FovMap};
 
 // actual size of the window
 pub const SCREEN_WIDTH: i32 = 80;
 pub const SCREEN_HEIGHT: i32 = 50;
+
+
+// TODO: Move to its own file?
+pub struct Tcod {
+    pub root: Root,
+    pub con: Offscreen,
+    pub panel: Offscreen,
+    pub fov: FovMap,
+    pub key: Key,
+    pub mouse: Mouse,
+}
 
 
 pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {

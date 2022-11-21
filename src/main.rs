@@ -2,7 +2,6 @@
 February Second
  */
 // Import Std Libs
-use std::cmp;
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -15,10 +14,14 @@ use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
+mod ai_algos;
 mod map;
 mod menus;
+mod moves;
 mod objects;
 mod transition;
+mod utils;
+use ai_algos::ai_take_turn;
 use map::create_h_tunnel;
 use map::create_room;
 use map::create_v_tunnel;
@@ -31,6 +34,9 @@ use menus::msgbox;
 use menus::render_bar;
 use menus::SCREEN_HEIGHT;
 use menus::SCREEN_WIDTH;
+use menus::Tcod;
+use moves::is_blocked;
+use moves::player_move_or_attack;
 use objects::Ai;
 use objects::DeathCallback;
 use objects::Equipment;
@@ -104,16 +110,6 @@ enum PlayerAction {
     TookTurn,
     DidntTakeTurn,
     Exit,
-}
-
-
-struct Tcod {
-    root: Root,
-    con: Offscreen,
-    panel: Offscreen,
-    fov: FovMap,
-    key: Key,
-    mouse: Mouse,
 }
 
 
@@ -757,19 +753,6 @@ fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option
 }
 
 
-fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
-    // first test the map tile
-    if map[x as usize][y as usize].blocked {
-        return true;
-    }
-
-    // now check for any blocking objects
-    objects
-        .iter()
-        .any(|object| object.blocks && object.pos() == (x, y))
-}
-
-
 // TODO: Bug. I entered a game and there were 3 npcs in the start room. (No npcs should spawn in FOV of the player at the Start.)
 fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     // fill map with "unblocked" tiles
@@ -936,6 +919,7 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
         format!("Level: {}", game.map_level),  // TODO: working... levels or?
     );
 
+    // TODO: fails for multiple items on the same tile.
     // display names of objects under the mouse
     tcod.panel.set_default_foreground(LIGHT_GREY);
     tcod.panel.print_ex(
@@ -979,133 +963,6 @@ fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recomput
         1.0,
         1.0,
     );
-}
-
-
-// TODO: This needs to return true/false for if a move actually happened.
-// move by the given amount, if the destination is not blocked
-fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
-    let (x, y) = objects[id].pos();
-    if !is_blocked(x + dx, y + dy, map, objects) {
-        objects[id].set_pos(x + dx, y + dy);
-    }
-}
-
-
-fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects: &mut [Object]) {
-    // vector from this object to the target, and distance
-    let dx = target_x - objects[id].x;
-    let dy = target_y - objects[id].y;
-    let distance = ((dx.pow(2) + dy.pow(2)) as f32).sqrt();
-
-    // normalize it to length 1 (preserving direction), then round it and
-    // convert to integer so the movement is restricted to the map grid
-    let dx = (dx as f32 / distance).round() as i32;
-    let dy = (dy as f32 / distance).round() as i32;
-    move_by(id, dx, dy, map, objects);
-}
-
-
-// Mutably borrow two *separate* elements from the given slice.
-// Panics when the indexes are equal or out of bounds.
-fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut T, &mut T) {
-    assert!(first_index != second_index);
-    let split_at_index = cmp::max(first_index, second_index);
-    let (first_slice, second_slice) = items.split_at_mut(split_at_index);
-    if first_index < second_index {
-        (&mut first_slice[first_index], &mut second_slice[0])
-    } else {
-        (&mut second_slice[0], &mut first_slice[second_index])
-    }
-}
-
-
-fn ai_basic(npc_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) -> Ai {
-    // a basic npc takes its turn. If you can see it, it can see you
-    let (npc_x, npc_y) = objects[npc_id].pos();
-    if tcod.fov.is_in_fov(npc_x, npc_y) {
-        if objects[npc_id].distance_to(&objects[PLAYER]) >= 2.0 {
-            // move towards player if far away
-            let (player_x, player_y) = objects[PLAYER].pos();
-            move_towards(npc_id, player_x, player_y, &game.map, objects);
-        } else if objects[PLAYER].fighter.map_or(false, |f| f.hp > 0) {
-            // close enough, attack! (if the player is still alive.)
-            let (npc, player) = mut_two(npc_id, PLAYER, objects);
-            npc.attack(player, game);
-        }
-    }
-    Ai::Basic
-}
-
-
-fn ai_confused(
-    npc_id: usize,
-    _tcod: &Tcod,
-    game: &mut Game,
-    objects: &mut [Object],
-    previous_ai: Box<Ai>,
-    num_turns: i32,
-) -> Ai {
-    if num_turns >= 0 {
-        // still confused ...
-        // move in a random direction, and decrease the number of turns confused
-        move_by(
-            npc_id,
-            rand::thread_rng().gen_range(-1, 2),
-            rand::thread_rng().gen_range(-1, 2),
-            &game.map,
-            objects,
-        );
-        Ai::Confused {
-            previous_ai: previous_ai,
-            num_turns: num_turns - 1,
-        }
-    } else {
-        // restore the previous AI (this one will be deleted)
-        game.messages.add(
-            format!("The {} is no longer confused!", objects[npc_id].name),
-            RED,
-        );
-        *previous_ai
-    }
-}
-
-
-fn ai_take_turn(npc_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Object]) {
-    use Ai::*;
-    if let Some(ai) = objects[npc_id].ai.take() {
-        let new_ai = match ai {
-            Basic => ai_basic(npc_id, tcod, game, objects),
-            Confused {
-                previous_ai,
-                num_turns,
-            } => ai_confused(npc_id, tcod, game, objects, previous_ai, num_turns),
-        };
-        objects[npc_id].ai = Some(new_ai);
-    }
-}
-
-
-fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [Object]) {
-    // the coordinates the player is moving to/attacking
-    let x = objects[PLAYER].x + dx;
-    let y = objects[PLAYER].y + dy;
-
-    // try to find an attackable object there
-    let target_id = objects
-        .iter()
-        .position(|object| object.fighter.is_some() && object.pos() == (x, y));
-
-    // attack if target found, move otherwise
-    match target_id {
-        Some(target_id) => {
-            let (player, target) = mut_two(PLAYER, target_id, objects);
-            player.attack(target, game);
-        }
-        None => {
-            move_by(PLAYER, dx, dy, &game.map, objects);
-        }
-    };
 }
 
 

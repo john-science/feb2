@@ -18,8 +18,10 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 // Import Locally
 mod items;
 mod messages;
+use items::Equipment;
 use items::Item;
 use items::Slot;
+use items::UseResult;
 use messages::Messages;
 
 // actual size of the window
@@ -97,24 +99,6 @@ enum Ai {
         previous_ai: Box<Ai>,
         num_turns: i32,
     },
-}
-
-
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-// An object that can be equipped, yielding bonuses.
-struct Equipment {
-    slot: Slot,
-    equipped: bool,
-    max_hp_bonus: i32,
-    defense_bonus: i32,
-    power_bonus: i32,
-}
-
-
-enum UseResult {
-    UsedUp,
-    UsedAndKept,
-    Cancelled,
 }
 
 

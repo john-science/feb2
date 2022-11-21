@@ -32,3 +32,21 @@ impl std::fmt::Display for Slot {
         }
     }
 }
+
+
+pub enum UseResult {
+    UsedUp,
+    UsedAndKept,
+    Cancelled,
+}
+
+
+// An object that can be equipped, yielding bonuses.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Equipment {
+    pub slot: Slot,
+    pub equipped: bool,
+    pub max_hp_bonus: i32,
+    pub defense_bonus: i32,
+    pub power_bonus: i32,
+}

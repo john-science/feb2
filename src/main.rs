@@ -17,15 +17,15 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
 mod map;
-mod items;
+mod objects;
 mod messages;
 use map::Map;
 use map::Tile;
-use items::Ai;
-use items::Equipment;
-use items::Item;
-use items::Slot;
-use items::UseResult;
+use objects::Ai;
+use objects::Equipment;
+use objects::Item;
+use objects::Slot;
+use objects::UseResult;
 use messages::Messages;
 
 // actual size of the window

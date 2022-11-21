@@ -6,7 +6,7 @@ use tcod::colors::*;
 use tcod::console::*;
 
 use crate::map::Map;
-use crate::messages::Messages;
+use crate::menus::Messages;
 
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

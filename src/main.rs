@@ -18,10 +18,17 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 mod map;
 mod menus;
 mod objects;
+mod transition;
+use map::create_h_tunnel;
+use map::create_room;
+use map::create_v_tunnel;
 use map::Map;
+use map::Rect;
 use map::Tile;
 use menus::menu;
 use menus::Messages;
+use menus::msgbox;
+use menus::render_bar;
 use menus::SCREEN_HEIGHT;
 use menus::SCREEN_WIDTH;
 use objects::Ai;
@@ -33,6 +40,8 @@ use objects::Item;
 use objects::Object;
 use objects::Slot;
 use objects::UseResult;
+use transition::from_map_level;
+use transition::Transition;
 
 // sizes and coordinates relevant for the GUI
 const BAR_WIDTH: i32 = 20;
@@ -98,23 +107,6 @@ enum PlayerAction {
 }
 
 
-struct Transition {
-    level: u32,
-    value: u32,
-}
-
-
-// Returns a value that depends on level. the table specifies what
-// value occurs after each level, default is 0.
-fn from_map_level(table: &[Transition], level: u32) -> u32 {
-    table
-        .iter()
-        .rev()
-        .find(|transition| level >= transition.level)
-        .map_or(0, |transition| transition.value)
-}
-
-
 struct Tcod {
     root: Root,
     con: Offscreen,
@@ -122,42 +114,6 @@ struct Tcod {
     fov: FovMap,
     key: Key,
     mouse: Mouse,
-}
-
-
-fn render_bar(
-    panel: &mut Offscreen,
-    x: i32,
-    y: i32,
-    total_width: i32,
-    name: &str,
-    value: i32,
-    maximum: i32,
-    bar_color: Color,
-    back_color: Color,
-) {
-    // render a bar (HP, experience, etc). First calculate the width of the bar
-    let bar_width = (value as f32 / maximum as f32 * total_width as f32) as i32;
-
-    // render the background first
-    panel.set_default_background(back_color);
-    panel.rect(x, y, total_width, 1, false, BackgroundFlag::Screen);
-
-    // now render the bar on top
-    panel.set_default_background(bar_color);
-    if bar_width > 0 {
-        panel.rect(x, y, bar_width, 1, false, BackgroundFlag::Screen);
-    }
-
-    // finally, some centered text with the values
-    panel.set_default_foreground(WHITE);
-    panel.print_ex(
-        x + total_width / 2,
-        y,
-        BackgroundFlag::None,
-        TextAlignment::Center,
-        &format!("{}: {}/{}", name, value, maximum),
-    );
 }
 
 
@@ -293,68 +249,6 @@ fn cast_fireball(
     objects[PLAYER].fighter.as_mut().unwrap().xp += xp_to_gain;
 
     UseResult::UsedUp
-}
-
-
-// A rectangle on the map, used to characterise a room.
-#[derive(Clone, Copy, Debug)]
-struct Rect {
-    x1: i32,
-    y1: i32,
-    x2: i32,
-    y2: i32,
-}
-
-impl Rect {
-    pub fn new(x: i32, y: i32, w: i32, h: i32) -> Self {
-        Rect {
-            x1: x,
-            y1: y,
-            x2: x + w,
-            y2: y + h,
-        }
-    }
-
-    pub fn center(&self) -> (i32, i32) {
-        // find the center of the Rect
-        let center_x: i32 = (self.x1 + self.x2) / 2;
-        let center_y: i32 = (self.y1 + self.y2) / 2;
-        (center_x, center_y)
-    }
-
-    pub fn intersects_with(&self, other: &Rect) -> bool {
-        // returns true if this rectangle intersects with another one
-        (self.x1 <= other.x2)
-            && (self.x2 >= other.x1)
-            && (self.y1 <= other.y2)
-            && (self.y2 >= other.y1)
-    }
-}
-
-
-fn create_room(room: Rect, map: &mut Map) {
-    // go through the tiles in the rectangle and make them passable
-    for x in (room.x1 + 1)..room.x2 {
-        for y in (room.y1 + 1)..room.y2 {
-            map[x as usize][y as usize] = Tile::empty();
-        }
-    }
-}
-
-
-fn create_h_tunnel(x1: i32, x2: i32, y: i32, map: &mut Map) {
-    // horizontal tunnel. `min()` and `max()` are used in case `x1 > x2`
-    for x in cmp::min(x1, x2)..(cmp::max(x1, x2) + 1) {
-        map[x as usize][y as usize] = Tile::empty();
-    }
-}
-
-
-fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
-    // vertical tunnel
-    for y in cmp::min(y1, y2)..(cmp::max(y1, y2) + 1) {
-        map[x as usize][y as usize] = Tile::empty();
-    }
 }
 
 
@@ -1381,12 +1275,6 @@ fn initialise_fov(tcod: &mut Tcod, map: &Map) {
 
     // unexplored areas start black (which is the default background color)
     tcod.con.clear();
-}
-
-
-fn msgbox(text: &str, width: i32, root: &mut Root) {
-    let options: &[&str] = &[];
-    menu(text, options, width, root);
 }
 
 

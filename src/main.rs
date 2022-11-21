@@ -16,8 +16,10 @@ use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
-pub mod items;
+mod items;
+mod messages;
 use items::Item;
+use messages::Messages;
 
 // actual size of the window
 const SCREEN_WIDTH: i32 = 80;
@@ -165,29 +167,6 @@ impl DeathCallback {
             Npc => npc_death,
         };
         callback(object, game);
-    }
-}
-
-
-#[derive(Serialize, Deserialize)]
-struct Messages {
-    messages: Vec<(String, Color)>,
-}
-
-
-impl Messages {
-    pub fn new() -> Self {
-        Self { messages: vec![] }
-    }
-
-    // add the new message as a tuple, with the text and the color
-    pub fn add<T: Into<String>>(&mut self, message: T, color: Color) {
-        self.messages.push((message.into(), color));
-    }
-
-    // Create a `DoubleEndedIterator` over the messages
-    pub fn iter(&self) -> impl DoubleEndedIterator<Item = &(String, Color)> {
-        self.messages.iter()
     }
 }
 

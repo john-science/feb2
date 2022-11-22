@@ -10,18 +10,24 @@ use std::io::{Read, Write};
 use rand::Rng;
 use tcod::colors::*;
 use tcod::console::*;
-use tcod::input::{self, Event, Key, Mouse};
-use tcod::map::{FovAlgorithm, Map as FovMap};
+use tcod::input::{self, Event, Key};
+use tcod::map::{Map as FovMap};
 
 // Import Locally
 mod ai_algos;
+mod magic;
 mod map;
 mod menus;
 mod moves;
 mod objects;
 mod transition;
 mod utils;
+mod ui;
 use ai_algos::ai_take_turn;
+use magic::cast_confuse;
+use magic::cast_heal;
+use magic::cast_lightning;
+use magic::cast_fireball;
 use map::create_h_tunnel;
 use map::create_room;
 use map::create_v_tunnel;
@@ -31,7 +37,6 @@ use map::Tile;
 use menus::menu;
 use menus::Messages;
 use menus::msgbox;
-use menus::render_bar;
 use menus::SCREEN_HEIGHT;
 use menus::SCREEN_WIDTH;
 use menus::Tcod;
@@ -48,48 +53,20 @@ use objects::Slot;
 use objects::UseResult;
 use transition::from_map_level;
 use transition::Transition;
-
-// sizes and coordinates relevant for the GUI
-const BAR_WIDTH: i32 = 20;
-const PANEL_HEIGHT: i32 = 7;
-const PANEL_Y: i32 = SCREEN_HEIGHT - PANEL_HEIGHT;
-const MSG_X: i32 = BAR_WIDTH + 2;
-const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
-const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
-const CHARACTER_SCREEN_WIDTH: i32 = 30;
+use ui::CHARACTER_SCREEN_WIDTH;
+use ui::MAP_HEIGHT;
+use ui::MAP_WIDTH;
+use ui::PANEL_HEIGHT;
+use ui::render_all;
 
 // 20 frames-per-second maximum
 const LIMIT_FPS: i32 = 20;
-
-// size of the map
-const MAP_WIDTH: i32 = 80;
-const MAP_HEIGHT: i32 = 43;
-
-// field-of-view
-const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
-const FOV_LIGHT_WALLS: bool = true; // light walls or not
-const TORCH_RADIUS: i32 = 10;
-
-// colors for map objects
-const COLOR_DARK_WALL: Color = Color { r: 6, g: 3, b: 1 };
-const COLOR_DARK_GROUND: Color = Color { r: 81, g: 44, b: 15 };
-const COLOR_LIGHT_WALL: Color = Color { r: 30, g: 16, b: 5 };
-const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
 
 // parameters for map generator
 const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
 const INVENTORY_WIDTH: i32 = 50;
-
-// TODO: Should depend on skills
-const HEAL_AMOUNT: i32 = 40;
-const LIGHTNING_DAMAGE: i32 = 40;
-const LIGHTNING_RANGE: i32 = 5;
-const CONFUSE_RANGE: i32 = 8;
-const CONFUSE_NUM_TURNS: i32 = 10;
-const FIREBALL_RADIUS: i32 = 3;
-const FIREBALL_DAMAGE: i32 = 25;
 
 // experience and level-ups (BASE + level * FACTOR)
 const LEVEL_UP_BASE: i32 = 200;
@@ -147,119 +124,6 @@ fn toggle_equipment(
         game.inventory[inventory_id].equip(&mut game.messages);
     }
     UseResult::UsedAndKept
-}
-
-
-// find closest enemy, up to a maximum range, and in the player's FOV
-fn closest_npc(tcod: &Tcod, objects: &[Object], max_range: i32) -> Option<usize> {
-    let mut closest_enemy = None;
-    let mut closest_dist = (max_range + 1) as f32; // start with (slightly more than) maximum range
-
-    for (id, object) in objects.iter().enumerate() {
-        if (id != PLAYER)
-            && object.fighter.is_some()
-            && object.ai.is_some()
-            && tcod.fov.is_in_fov(object.x, object.y)
-        {
-            // calculate distance between this object and the player
-            let dist = objects[PLAYER].distance_to(object);
-            if dist < closest_dist {
-                // it's closer, so remember it
-                closest_enemy = Some(id);
-                closest_dist = dist;
-            }
-        }
-    }
-    closest_enemy
-}
-
-
-// NOTE: This expects only the player to cast lightning
-fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
-    // find closest enemy (inside a maximum range and damage it)
-    let npc_id = closest_npc(tcod, objects, LIGHTNING_RANGE);
-    if let Some(npc_id) = npc_id {
-        // zap it!
-        game.messages.add(
-            format!(
-                "A lightning bolt strikes the {} with a loud thunder! \
-                 The damage is {} hit points.",
-                objects[npc_id].name, LIGHTNING_DAMAGE
-            ),
-            LIGHT_BLUE,
-        );
-        if let Some(xp) = objects[npc_id].take_damage(LIGHTNING_DAMAGE, game) {
-            objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
-        }
-        return UseResult::UsedUp;
-    } else {
-        // no enemy found within maximum range
-        game.messages.add("No enemy is close enough to strike.", RED);
-        return UseResult::Cancelled;
-    }
-}
-
-
-// NOTE: This expects only the player to cast fireball
-fn cast_fireball(
-    _inventory_id: usize,
-    tcod: &mut Tcod,
-    game: &mut Game,
-    objects: &mut [Object],
-) -> UseResult {
-    // ask the player for a target tile to throw a fireball at
-    game.messages.add(
-        "Left-click a target tile for the fireball, or right-click to cancel.",
-        LIGHT_CYAN,
-    );
-    let (x, y) = match target_tile(tcod, game, objects, None) {
-        Some(tile_pos) => tile_pos,
-        None => return UseResult::Cancelled,
-    };
-    game.messages.add(
-        format!(
-            "The fireball explodes, burning everything within {} tiles!",
-            FIREBALL_RADIUS
-        ),
-        ORANGE,
-    );
-
-    let mut xp_to_gain = 0;
-    for (id, obj) in objects.iter_mut().enumerate() {
-        if obj.distance(x, y) <= FIREBALL_RADIUS as f32 && obj.fighter.is_some() {
-            game.messages.add(
-                format!(
-                    "The {} gets burned for {} hit points.",
-                    obj.name, FIREBALL_DAMAGE
-                ),
-                ORANGE,
-            );
-            if let Some(xp) = obj.take_damage(FIREBALL_DAMAGE, game) {
-                if id != PLAYER {
-                    // Don't reward the player for burning themself.
-                    xp_to_gain += xp;
-                }
-            }
-        }
-    }
-    objects[PLAYER].fighter.as_mut().unwrap().xp += xp_to_gain;
-
-    UseResult::UsedUp
-}
-
-
-// return a string with the names of all objects under the mouse
-fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
-    let (x, y) = (mouse.cx as i32, mouse.cy as i32);
-
-    // create a list with the names of all objects at the mouse's coordinates and in FOV
-    let names = objects
-        .iter()
-        .filter(|obj| obj.pos() == (x, y) && fov_map.is_in_fov(obj.x, obj.y))
-        .map(|obj| obj.name.clone())
-        .collect::<Vec<_>>();
-
-    names.join(", ") // join the names, separated by commas
 }
 
 
@@ -558,122 +422,6 @@ fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut
 }
 
 
-// TODO: I'd like to be able to tab-select too. And auto-select closest.
-// returns a clicked npc inside FOV up to a range, or None if right-clicked
-fn target_npc(
-    tcod: &mut Tcod,
-    game: &mut Game,
-    objects: &[Object],
-    max_range: Option<f32>,
-) -> Option<usize> {
-    loop {
-        match target_tile(tcod, game, objects, max_range) {
-            Some((x, y)) => {
-                // return the first clicked npc, otherwise continue looping
-                for (id, obj) in objects.iter().enumerate() {
-                    if obj.pos() == (x, y) && obj.fighter.is_some() && id != PLAYER {
-                        return Some(id);
-                    }
-                }
-            }
-            None => return None,
-        }
-    }
-}
-
-
-
-fn cast_heal(
-    _inventory_id: usize,
-    _tcod: &mut Tcod,
-    game: &mut Game,
-    objects: &mut [Object],
-) -> UseResult {
-    // heal the player
-    let player = &mut objects[PLAYER];
-    if let Some(fighter) = player.fighter {
-        if fighter.hp == player.max_hp(game) {
-            game.messages.add("You are already at full health.", RED);
-            return UseResult::Cancelled;
-        }
-        game.messages
-            .add("Your wounds start to feel better!", LIGHT_VIOLET);
-        player.heal(HEAL_AMOUNT, game);
-        return UseResult::UsedUp;
-    }
-    UseResult::Cancelled
-}
-
-
-fn cast_confuse(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
-    // ask the player for a target to confuse
-    game.messages.add(
-        "Left-click an enemy to confuse it, or right-click to cancel.",
-        LIGHT_CYAN,
-    );
-    let npc_id = target_npc(tcod, game, objects, Some(CONFUSE_RANGE as f32));
-    if let Some(npc_id) = npc_id {
-        let old_ai = objects[npc_id].ai.take().unwrap_or(Ai::Basic);
-        // replace the npc's AI with a "confused" one; after
-        // some turns it will restore the old AI
-        objects[npc_id].ai = Some(Ai::Confused {
-            previous_ai: Box::new(old_ai),
-            num_turns: CONFUSE_NUM_TURNS,
-        });
-        game.messages.add(
-            format!(
-                "The eyes of {} look vacant, as he starts to stumble around!",
-                objects[npc_id].name
-            ),
-            LIGHT_GREEN,
-        );
-        UseResult::UsedUp
-    } else {
-        // no enemy fonud within maximum range
-        game.messages.add("No enemy is close enough to strike.", RED);
-        UseResult::Cancelled
-    }
-}
-
-
-// Return the position of a tile left-clicked in player's FOV (optionally in a range),
-// or (None, None) if right-clicked.
-fn target_tile(
-    tcod: &mut Tcod,
-    game: &mut Game,
-    objects: &[Object],
-    max_range: Option<f32>,
-) -> Option<(i32, i32)> {
-    use tcod::input::KeyCode::Escape;
-    loop {
-        // render the screen. this erases the inventory and shows the names of
-        // objects under the mouse.
-        tcod.root.flush();
-        let event = input::check_for_event(input::KEY_PRESS | input::MOUSE).map(|e| e.1);
-        match event {
-            Some(Event::Mouse(m)) => tcod.mouse = m,
-            Some(Event::Key(k)) => tcod.key = k,
-            None => tcod.key = Default::default(),
-        }
-        render_all(tcod, game, objects, false);
-
-        let (x, y) = (tcod.mouse.cx as i32, tcod.mouse.cy as i32);
-
-        // accept the target if the player clicked in FOV, and in case a range
-        // is specified, if it's in that range
-        let in_fov = (x < MAP_WIDTH) && (y < MAP_HEIGHT) && tcod.fov.is_in_fov(x, y);
-        let in_range = max_range.map_or(true, |range| objects[PLAYER].distance(x, y) <= range);
-        if tcod.mouse.lbutton_pressed && in_fov && in_range {
-            return Some((x, y));
-        }
-
-        if tcod.mouse.rbutton_pressed || tcod.key.code == Escape {
-            return None; // cancel if the player right-clicked or pressed Escape
-        }
-    }
-}
-
-
 fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
     let player = &mut objects[PLAYER];
     let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
@@ -840,129 +588,6 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
     game.map_level += 1;
     game.map = make_map(objects, game.map_level);
     initialise_fov(tcod, &game.map);
-}
-
-
-fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: bool) {
-    if fov_recompute {
-        // recompute FOV if needed (the player moved or something)
-        let player = &objects[PLAYER];
-        tcod.fov
-            .compute_fov(player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO);
-    }
-
-    // go through all tiles, and set their background color
-    for y in 0..MAP_HEIGHT {
-        for x in 0..MAP_WIDTH {
-            let visible = tcod.fov.is_in_fov(x, y);
-            let wall = game.map[x as usize][y as usize].block_sight;
-            let color = match (visible, wall) {
-                // outside of field of view:
-                (false, true) => COLOR_DARK_WALL,
-                (false, false) => COLOR_DARK_GROUND,
-                // inside fov:
-                (true, true) => COLOR_LIGHT_WALL,
-                (true, false) => COLOR_LIGHT_GROUND,
-            };
-            let explored = &mut game.map[x as usize][y as usize].explored;
-            if visible {
-                // since it's visible, explore it
-                *explored = true;
-            }
-            if *explored {
-                // show explored tiles only (any visible tile is explored already)
-                tcod.con
-                    .set_char_background(x, y, color, BackgroundFlag::Set);
-            }
-        }
-    }
-
-    // draw all objects in the list, in correct order
-    let mut to_draw: Vec<_> = objects
-        .iter()
-        .filter(|o| {
-            tcod.fov.is_in_fov(o.x, o.y)
-                || (o.always_visible && game.map[o.x as usize][o.y as usize].explored)
-        })
-        .collect();
-    // sort so that non-blocking objects come first
-    to_draw.sort_by(|o1, o2| o1.blocks.cmp(&o2.blocks));
-    // draw the objects in the list
-    for object in &to_draw {
-        object.draw(&mut tcod.con);
-    }
-
-    // prepare to render the GUI panel
-    tcod.panel.set_default_background(BLACK);
-    tcod.panel.clear();
-
-    // show the player's stats
-    let hp = objects[PLAYER].fighter.map_or(0, |f| f.hp);
-    let max_hp = objects[PLAYER].max_hp(game);
-    render_bar(
-        &mut tcod.panel,
-        1,
-        1,
-        BAR_WIDTH,
-        "HP",
-        hp,
-        max_hp,
-        LIGHT_RED,
-        DARKER_RED,
-    );
-
-    tcod.panel.print_ex(
-        1,
-        3,
-        BackgroundFlag::None,
-        TextAlignment::Left,
-        format!("Level: {}", game.map_level),  // TODO: working... levels or?
-    );
-
-    // TODO: fails for multiple items on the same tile.
-    // display names of objects under the mouse
-    tcod.panel.set_default_foreground(LIGHT_GREY);
-    tcod.panel.print_ex(
-        1,
-        0,
-        BackgroundFlag::None,
-        TextAlignment::Left,
-        get_names_under_mouse(tcod.mouse, objects, &tcod.fov),
-    );
-
-    // print the game messages, one line at a time
-    let mut y = MSG_HEIGHT as i32;
-    for &(ref msg, color) in game.messages.iter().rev() {
-        let msg_height = tcod.panel.get_height_rect(MSG_X, y, MSG_WIDTH, 0, msg);
-        y -= msg_height;
-        if y < 0 {
-            break;
-        }
-        tcod.panel.set_default_foreground(color);
-        tcod.panel.print_rect(MSG_X, y, MSG_WIDTH, 0, msg);
-    }
-
-    // blit the contents of "con" to the root console
-    blit(
-        &tcod.con,
-        (0, 0),
-        (MAP_WIDTH, MAP_HEIGHT),
-        &mut tcod.root,
-        (0, 0),
-        1.0,
-        1.0,
-    );
-
-    // blit the contents of `panel` to the root console
-    blit(
-        &tcod.panel,
-        (0, 0),
-        (SCREEN_WIDTH, PANEL_HEIGHT),
-        &mut tcod.root,
-        (0, PANEL_Y),
-        1.0,
-        1.0,
-    );
 }
 
 

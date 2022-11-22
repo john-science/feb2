@@ -14,7 +14,7 @@ use crate::objects::Object;
 use crate::utils::mut_two;
 
 
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs.
+const PLAYER: usize = 0;  // TODO: Dupicate from main.rs!
 
 
 // Dispatch method to choose an AI algo to move the NPC

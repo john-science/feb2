@@ -8,10 +8,12 @@ use tcod::input::{Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
+use crate::constants::MAP_WIDTH;
+use crate::constants::MAP_HEIGHT;
 use crate::constants::PLAYER;
+use crate::constants::SCREEN_HEIGHT;
+use crate::constants::SCREEN_WIDTH;
 use crate::menus::render_bar;
-use crate::menus::SCREEN_HEIGHT;
-use crate::menus::SCREEN_WIDTH;
 use crate::menus::Tcod;
 use crate::objects::Game;
 use crate::objects::Object;
@@ -26,10 +28,6 @@ pub const COLOR_DARK_WALL: Color = Color { r: 6, g: 3, b: 1 };
 pub const COLOR_DARK_GROUND: Color = Color { r: 81, g: 44, b: 15 };
 pub const COLOR_LIGHT_WALL: Color = Color { r: 30, g: 16, b: 5 };
 pub const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
-
-// size of the map
-pub const MAP_WIDTH: i32 = 80;
-pub const MAP_HEIGHT: i32 = 43;
 
 // sizes and coordinates relevant for the GUI
 pub const BAR_WIDTH: i32 = 20;

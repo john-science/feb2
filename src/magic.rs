@@ -6,14 +6,14 @@ use tcod::colors::*;
 use tcod::input::{self, Event};
 
 // Import Locally
+use crate::constants::MAP_WIDTH;
+use crate::constants::MAP_HEIGHT;
 use crate::constants::PLAYER;
 use crate::menus::Tcod;
 use crate::objects::Ai;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::objects::UseResult;
-use crate::ui::MAP_HEIGHT;
-use crate::ui::MAP_WIDTH;
 use crate::ui::render_all;
 
 // TODO: Should depend on skills

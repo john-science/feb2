@@ -8,9 +8,9 @@ use tcod::console::*;
 use tcod::input::{Key, Mouse};
 use tcod::map::{Map as FovMap};
 
-// actual size of the window
-pub const SCREEN_WIDTH: i32 = 80;
-pub const SCREEN_HEIGHT: i32 = 50;
+// Import Locally
+use crate::constants::SCREEN_HEIGHT;
+use crate::constants::SCREEN_WIDTH;
 
 
 // TODO: Move to its own file?

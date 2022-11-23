@@ -9,8 +9,10 @@ use tcod::input::{Key, Mouse};
 use tcod::map::{Map as FovMap};
 
 // Import Locally
+use crate::constants::INVENTORY_WIDTH;
 use crate::constants::SCREEN_HEIGHT;
 use crate::constants::SCREEN_WIDTH;
+use crate::objects::Object;
 
 
 // TODO: Move to its own file?
@@ -21,6 +23,37 @@ pub struct Tcod {
     pub fov: FovMap,
     pub key: Key,
     pub mouse: Mouse,
+}
+
+
+// TODO: Why does this return an Option, not an i32? Couldn't we just return 0, not None?
+pub fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option<usize> {
+    // show a menu with each item of the inventory as an option
+    let options = if inventory.len() == 0 {
+        vec!["Inventory is empty.".into()]
+    } else {
+        inventory
+            .iter()
+            .map(|item| {
+                // show additional information, in case it's equipped
+                match item.equipment {
+                    Some(equipment) if equipment.equipped => {
+                        format!("{} (on {})", item.name, equipment.slot)
+                    }
+                    _ => item.name.clone(),
+                }
+            })
+            .collect()
+    };
+
+    let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
+
+    // if an item was chosen, return it
+    if inventory.len() > 0 {
+        return inventory_index;
+    } else {
+        return None;
+    }
 }
 
 

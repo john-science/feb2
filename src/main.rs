@@ -42,6 +42,7 @@ use map::create_v_tunnel;
 use map::Map;
 use map::Rect;
 use map::Tile;
+use menus::inventory_menu;
 use menus::menu;
 use menus::Messages;
 use menus::msgbox;
@@ -67,7 +68,6 @@ const LIMIT_FPS: i32 = 20;
 const ROOM_MAX_SIZE: i32 = 12;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 32;
-const INVENTORY_WIDTH: i32 = 50;
 
 // experience and level-ups (BASE + level * FACTOR)
 const LEVEL_UP_BASE: i32 = 200;
@@ -355,37 +355,6 @@ fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
             }
             _ => unreachable!(),
         }
-    }
-}
-
-
-// TODO: Why does this return an Option, not an i32? Couldn't we just return 0, not None?
-fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option<usize> {
-    // show a menu with each item of the inventory as an option
-    let options = if inventory.len() == 0 {
-        vec!["Inventory is empty.".into()]
-    } else {
-        inventory
-            .iter()
-            .map(|item| {
-                // show additional information, in case it's equipped
-                match item.equipment {
-                    Some(equipment) if equipment.equipped => {
-                        format!("{} (on {})", item.name, equipment.slot)
-                    }
-                    _ => item.name.clone(),
-                }
-            })
-            .collect()
-    };
-
-    let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
-
-    // if an item was chosen, return it
-    if inventory.len() > 0 {
-        return inventory_index;
-    } else {
-        return None;
     }
 }
 

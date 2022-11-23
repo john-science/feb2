@@ -8,7 +8,7 @@ use tcod::input::{Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
-use crate::constants::*;
+use crate::constants::*;  // TODO: Will the complier make this more efficient for me?
 use crate::menus::render_bar;
 use crate::menus::Tcod;
 use crate::objects::Game;

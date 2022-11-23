@@ -117,7 +117,7 @@ fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
     game.messages.add(
-        "You descend deeper into Purgatory...",  // TODO: Flip!
+        "You ascend higher into Purgatory...",
         RED,
     );
     game.map_level += 1;
@@ -195,8 +195,8 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             return TookTurn;
         }
 
-        // go down stairs, if the player is on them
-        (Key { code: Text, .. }, "<", true) => {  // TODO: Flip!
+        // go up stairs, if the player is on them
+        (Key { code: Text, .. }, ">", true) => {
             let player_on_stairs = objects
                 .iter()
                 .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");

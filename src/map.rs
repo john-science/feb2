@@ -421,7 +421,7 @@ pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
 
     // create stairs at the center of the last room
     let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
-    let mut stairs = Object::new(last_room_x, last_room_y, '<', "stairs", WHITE, false);  // TODO: Flip!
+    let mut stairs = Object::new(last_room_x, last_room_y, '>', "stairs", WHITE, false);
     stairs.always_visible = true;
     objects.push(stairs);
 

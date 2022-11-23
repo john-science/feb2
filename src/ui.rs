@@ -8,35 +8,13 @@ use tcod::input::{Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
-use crate::constants::MAP_WIDTH;
-use crate::constants::MAP_HEIGHT;
-use crate::constants::PLAYER;
-use crate::constants::SCREEN_HEIGHT;
-use crate::constants::SCREEN_WIDTH;
+use crate::constants::*;
 use crate::menus::render_bar;
 use crate::menus::Tcod;
 use crate::objects::Game;
 use crate::objects::Object;
 
-// field-of-view
-pub const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
-pub const FOV_LIGHT_WALLS: bool = true; // light walls or not
-pub const TORCH_RADIUS: i32 = 10;
-
-// colors for map objects
-pub const COLOR_DARK_WALL: Color = Color { r: 6, g: 3, b: 1 };
-pub const COLOR_DARK_GROUND: Color = Color { r: 81, g: 44, b: 15 };
-pub const COLOR_LIGHT_WALL: Color = Color { r: 30, g: 16, b: 5 };
-pub const COLOR_LIGHT_GROUND: Color = Color { r: 124, g: 65, b: 21 };
-
-// sizes and coordinates relevant for the GUI
-pub const BAR_WIDTH: i32 = 20;
-pub const PANEL_HEIGHT: i32 = 7;
-pub const PANEL_Y: i32 = SCREEN_HEIGHT - PANEL_HEIGHT;
-pub const MSG_X: i32 = BAR_WIDTH + 2;
-pub const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
-pub const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
-pub const CHARACTER_SCREEN_WIDTH: i32 = 30;
+const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 
 
 // TODO: Fails for multiple items in a pile.
@@ -60,7 +38,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         // recompute FOV if needed (the player moved or something)
         let player = &objects[PLAYER];
         tcod.fov
-            .compute_fov(player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO);
+            .compute_fov(player.x, player.y, TORCH_RADIUS, true, FOV_ALGO);
     }
 
     // go through all tiles, and set their background color

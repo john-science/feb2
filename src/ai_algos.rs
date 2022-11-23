@@ -5,6 +5,7 @@
 use rand::Rng;
 use tcod::colors::*;
 
+use crate::constants::PLAYER;
 use crate::menus::Tcod;
 use crate::moves::move_by;
 use crate::moves::move_towards;
@@ -12,9 +13,6 @@ use crate::objects::Ai;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::utils::mut_two;
-
-
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs!
 
 
 // Dispatch method to choose an AI algo to move the NPC

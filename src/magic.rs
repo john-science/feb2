@@ -6,24 +6,13 @@ use tcod::colors::*;
 use tcod::input::{self, Event};
 
 // Import Locally
-use crate::constants::MAP_WIDTH;
-use crate::constants::MAP_HEIGHT;
-use crate::constants::PLAYER;
+use crate::constants::*;
 use crate::menus::Tcod;
 use crate::objects::Ai;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::objects::UseResult;
 use crate::ui::render_all;
-
-// TODO: Should depend on skills
-const HEAL_AMOUNT: i32 = 40;
-const LIGHTNING_DAMAGE: i32 = 40;
-const LIGHTNING_RANGE: i32 = 5;
-const CONFUSE_RANGE: i32 = 8;
-const CONFUSE_NUM_TURNS: i32 = 10;
-const FIREBALL_RADIUS: i32 = 3;
-const FIREBALL_DAMAGE: i32 = 25;
 
 
 // find closest enemy, up to a maximum range, and in the player's FOV

@@ -26,8 +26,10 @@ mod transition;
 mod ui;
 mod utils;
 use ai_algos::ai_take_turn;
-use constants::MAP_WIDTH;
+use constants::CHARACTER_SCREEN_WIDTH;
 use constants::MAP_HEIGHT;
+use constants::MAP_WIDTH;
+use constants::PANEL_HEIGHT;
 use constants::PLAYER;
 use constants::SCREEN_HEIGHT;
 use constants::SCREEN_WIDTH;
@@ -56,8 +58,6 @@ use objects::Object;
 use objects::Slot;
 use transition::from_map_level;
 use transition::Transition;
-use ui::CHARACTER_SCREEN_WIDTH;
-use ui::PANEL_HEIGHT;
 use ui::render_all;
 
 // 20 frames-per-second maximum

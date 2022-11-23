@@ -477,10 +477,10 @@ fn main() {
 
     // initialize the TCOD "Root" object
     let root: Root = Root::initializer()
-        .font("dejavu16x16.png", FontLayout::Tcod)
+        .font("dejavu16x16.png", FontLayout::Tcod)  // TODO: Config
         .font_type(FontType::Greyscale)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
-        .title("February Second")
+        .title("February Second")  // TODO: Config
         .init();
 
     // use the TCOD "Root" object to create a mutable TCOD struct

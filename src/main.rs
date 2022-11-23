@@ -15,6 +15,7 @@ use tcod::map::{Map as FovMap};
 
 // Import Locally
 mod ai_algos;
+mod constants;
 mod equipment;
 mod magic;
 mod map;
@@ -25,6 +26,7 @@ mod transition;
 mod ui;
 mod utils;
 use ai_algos::ai_take_turn;
+use constants::PLAYER;
 use equipment::drop_item;
 use equipment::pick_item_up;
 use equipment::use_item;
@@ -72,21 +74,10 @@ const LEVEL_UP_BASE: i32 = 200;
 const LEVEL_UP_FACTOR: i32 = 150;
 const LEVEL_SCREEN_WIDTH: i32 = 40;
 
-// player will always be the first object
-const PLAYER: usize = 0;  // TODO: Centralize location
-
 
 // TODO: Break this into multiple files.
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
-
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum PlayerAction {
-    TookTurn,
-    DidntTakeTurn,
-    Exit,
-}
 
 
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
@@ -486,6 +477,14 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
     game.map_level += 1;
     game.map = make_map(objects, game.map_level);
     initialise_fov(tcod, &game.map);
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum PlayerAction {
+    TookTurn,
+    DidntTakeTurn,
+    Exit,
 }
 
 

@@ -8,6 +8,7 @@ use tcod::input::{Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
+use crate::constants::PLAYER;
 use crate::menus::render_bar;
 use crate::menus::SCREEN_HEIGHT;
 use crate::menus::SCREEN_WIDTH;
@@ -38,8 +39,6 @@ pub const MSG_X: i32 = BAR_WIDTH + 2;
 pub const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
 pub const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
 pub const CHARACTER_SCREEN_WIDTH: i32 = 30;
-
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs
 
 
 // TODO: Fails for multiple items in a pile.

@@ -6,6 +6,7 @@ use tcod::colors::*;
 use tcod::input::{self, Event};
 
 // Import Locally
+use crate::constants::PLAYER;
 use crate::menus::Tcod;
 use crate::objects::Ai;
 use crate::objects::Game;
@@ -23,8 +24,6 @@ const CONFUSE_RANGE: i32 = 8;
 const CONFUSE_NUM_TURNS: i32 = 10;
 const FIREBALL_RADIUS: i32 = 3;
 const FIREBALL_DAMAGE: i32 = 25;
-
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs!
 
 
 // find closest enemy, up to a maximum range, and in the player's FOV

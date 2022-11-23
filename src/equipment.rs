@@ -5,6 +5,7 @@
 use tcod::colors::*;
 
 // Import Locally
+use crate::constants::PLAYER;
 use crate::magic::cast_confuse;
 use crate::magic::cast_heal;
 use crate::magic::cast_fireball;
@@ -15,8 +16,6 @@ use crate::objects::Slot;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::objects::UseResult;
-
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs!
 
 
 fn get_equipped_in_slot(slot: Slot, inventory: &[Object]) -> Option<usize> {

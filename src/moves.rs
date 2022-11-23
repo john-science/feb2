@@ -2,13 +2,11 @@
   TODO
  */
 // Import Third-Party
+use crate::constants::PLAYER;
 use crate::map::Map;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::utils::mut_two;
-
-
-const PLAYER: usize = 0;  // TODO: Dupicate from main.rs
 
 
 pub fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {

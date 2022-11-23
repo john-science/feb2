@@ -42,3 +42,8 @@ pub const CONFUSE_RANGE: i32 = 8;
 pub const CONFUSE_NUM_TURNS: i32 = 10;
 pub const FIREBALL_RADIUS: i32 = 3;
 pub const FIREBALL_DAMAGE: i32 = 25;
+
+// parameters for map generator
+pub const ROOM_MAX_SIZE: i32 = 12;
+pub const ROOM_MIN_SIZE: i32 = 6;
+pub const MAX_ROOMS: i32 = 32;

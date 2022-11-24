@@ -222,6 +222,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
                 let msg = format!(
 "Character information
 
+Karma: {}
 Level: {}
 Experience: {}
 Experience to level up: {}
@@ -229,6 +230,7 @@ Experience to level up: {}
 Maximum HP: {}
 Attack: {}
 Defense: {}",
+                    fighter.karma,
                     level,
                     fighter.xp,
                     level_up_xp,
@@ -338,6 +340,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         base_defense: 2,
         base_power: 3,
         xp: 0,
+        karma: -1000,
         on_death: DeathCallback::Player,
     });
 

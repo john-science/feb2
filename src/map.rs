@@ -186,6 +186,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                         base_defense: 0,
                         base_power: 4,
                         xp: 35,
+                        karma: -1000,
                         on_death: DeathCallback::Npc,
                     });
                     orc
@@ -200,6 +201,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                         base_defense: 2,
                         base_power: 8,
                         xp: 100,
+                        karma: -1000,
                         on_death: DeathCallback::Npc,
                     });
                 troll

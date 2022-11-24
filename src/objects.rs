@@ -90,6 +90,7 @@ impl DeathCallback {
 }
 
 
+// TODO: restart game
 fn player_death(player: &mut Object, game: &mut Game) {
     // the game ended!
     game.messages.add("You died!", RED);
@@ -129,6 +130,7 @@ pub struct Fighter {
     pub base_defense: i32,
     pub base_power: i32,
     pub xp: i32,  // TODO: u32?
+    pub karma: i32,
     pub on_death: DeathCallback,
 }
 

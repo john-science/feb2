@@ -244,7 +244,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         },
         Weighted {
             weight: 35,
-            item: Item::Heal,
+            item: Item::HealPot,
         },
         Weighted {
             weight: from_map_level(
@@ -254,7 +254,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                 }],
                 level,
             ),
-            item: Item::Lightning,
+            item: Item::LightningScroll,
         },
         Weighted {
             weight: from_map_level(
@@ -264,7 +264,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                 }],
                 level,
             ),
-            item: Item::Fireball,
+            item: Item::FireballScroll,
         },
         Weighted {
             weight: from_map_level(
@@ -274,7 +274,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                 }],
                 level,
             ),
-            item: Item::Confuse,
+            item: Item::ConfuseScroll,
         },
     ];
     let item_choice = WeightedChoice::new(item_chances);
@@ -316,31 +316,31 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                     });
                     object
                 }
-                Item::Heal => {
+                Item::HealPot => {
                     // create a healing potion
                     let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
-                    object.item = Some(Item::Heal);
+                    object.item = Some(Item::HealPot);
                     object
                 }
-                Item::Lightning => {
+                Item::LightningScroll => {
                     // create a lightning bolt scroll
                     let mut object =
                         Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false);
-                    object.item = Some(Item::Lightning);
+                    object.item = Some(Item::LightningScroll);
                     object
                 }
-                Item::Fireball => {
+                Item::FireballScroll => {
                     // create a fireball scroll
                     let mut object =
                         Object::new(x, y, '#', "scroll of fireball", LIGHT_YELLOW, false);
-                    object.item = Some(Item::Fireball);
+                    object.item = Some(Item::FireballScroll);
                     object
                 }
-                Item::Confuse => {
+                Item::ConfuseScroll => {
                     // create a confuse scroll
                     let mut object =
                         Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false);
-                    object.item = Some(Item::Confuse);
+                    object.item = Some(Item::ConfuseScroll);
                     object
                 }
             };

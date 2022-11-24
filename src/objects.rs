@@ -15,10 +15,10 @@ use crate::menus::Messages;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Item {
-    Heal,  // TODO: HealPot
-    Lightning,  // TODO: LightningScroll
-    Confuse,  // TODO: ConfuseScroll
-    Fireball,  // TODO: FireballScroll
+    HealPot,
+    LightningScroll,
+    ConfuseScroll,
+    FireballScroll,
     Sword,
     Shield,
 }

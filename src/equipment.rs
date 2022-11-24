@@ -94,10 +94,10 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
     if let Some(item) = game.inventory[inventory_id].item {
         let on_use = match item {
             // TODO: This seems like a limiting design.
-            Heal => cast_heal,
-            Lightning => cast_lightning,
-            Confuse => cast_confuse,
-            Fireball => cast_fireball,
+            HealPot => cast_heal,
+            LightningScroll => cast_lightning,
+            ConfuseScroll => cast_confuse,
+            FireballScroll => cast_fireball,
             Sword => toggle_equipment,
             Shield => toggle_equipment,
         };

@@ -315,6 +315,7 @@ fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
 }
 
 
+// TODO: We need to save the game version, so we can check it at load time.
 fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
     let mut json_save_state = String::new();
     let mut file = File::open(".save.game")?;

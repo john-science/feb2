@@ -25,7 +25,10 @@ mod transition;
 mod ui;
 mod utils;
 use ai_algos::ai_take_turn;
+use constants::AUTHOR_LINE;
 use constants::CHARACTER_SCREEN_WIDTH;
+use constants::FONT_IMG;
+use constants::GAME_TITLE;
 use constants::MAP_HEIGHT;
 use constants::MAP_WIDTH;
 use constants::PANEL_HEIGHT;
@@ -61,7 +64,6 @@ const LEVEL_UP_FACTOR: i32 = 150;
 const LEVEL_SCREEN_WIDTH: i32 = 40;
 
 
-// TODO: Break this into multiple files.
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
 
@@ -303,9 +305,11 @@ fn initialise_fov(tcod: &mut Tcod, map: &Map) {
 }
 
 
+// NOTE: There can currently be only one save game at a time.
+//       But the save games are human-readable, storable, and editable.
 fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
     let save_data = serde_json::to_string(&(game, objects))?;
-    let mut file = File::create("savegame")?;  // TODO: Default savegame file only?
+    let mut file = File::create(".save.game")?;
     file.write_all(save_data.as_bytes())?;
     Ok(())
 }
@@ -313,7 +317,7 @@ fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
 
 fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
     let mut json_save_state = String::new();
-    let mut file = File::open("savegame")?;
+    let mut file = File::open(".save.game")?;
     file.read_to_string(&mut json_save_state)?;
     let result = serde_json::from_str::<(Game, Vec<Object>)>(&json_save_state)?;
     Ok(result)
@@ -428,14 +432,14 @@ fn main_menu(tcod: &mut Tcod) {
             SCREEN_HEIGHT / 2 - 4,
             BackgroundFlag::None,
             TextAlignment::Center,
-            "February Second",
+            GAME_TITLE,
         );
         tcod.root.print_ex(
             SCREEN_WIDTH / 2,
             SCREEN_HEIGHT - 2,
             BackgroundFlag::None,
             TextAlignment::Center,
-            "By John Science",
+            AUTHOR_LINE,
         );
 
         // show options and wait for the player's choice
@@ -477,10 +481,10 @@ fn main() {
 
     // initialize the TCOD "Root" object
     let root: Root = Root::initializer()
-        .font("dejavu16x16.png", FontLayout::Tcod)  // TODO: Config
+        .font(FONT_IMG, FontLayout::Tcod)
         .font_type(FontType::Greyscale)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
-        .title("February Second")  // TODO: Config
+        .title(GAME_TITLE)
         .init();
 
     // use the TCOD "Root" object to create a mutable TCOD struct

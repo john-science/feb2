@@ -1,5 +1,5 @@
 /*
-  TODO
+  Tools used to move the Player and NPCs
  */
 // Import Third-Party
 use crate::constants::PLAYER;

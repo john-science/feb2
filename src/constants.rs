@@ -1,7 +1,12 @@
 /*
-  TODO
+  A central place for general constants.
  */
 use tcod::colors::Color;
+
+// Top-level strings
+pub const GAME_TITLE: &str = "February Second";
+pub const AUTHOR_LINE: &str = "by John Science";
+pub const FONT_IMG: &str = "dejavu16x16.png";
 
 // player will always be the first object
 pub const PLAYER: usize = 0;

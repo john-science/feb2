@@ -1,5 +1,5 @@
 /*
-  TODO
+  Rendering the User Interface
  */
 // Import Third-Party
 use tcod::colors::*;

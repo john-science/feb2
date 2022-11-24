@@ -1,5 +1,8 @@
 /*
-  TODO
+  Misc Utils
+
+  NOTE: It has been said that "utils" is the worst name in programming,
+  and that such things are just used to hide bad code organization.
  */
 // Import Std Libs
 use std::cmp;

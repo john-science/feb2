@@ -1,5 +1,6 @@
 /*
-  TODO
+  Support Magic Needs
+  Potions/Wands/Casting - heal/fire/confuse/etc
  */
 // Import Third-Party
 use tcod::colors::*;

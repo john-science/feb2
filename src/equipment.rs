@@ -1,5 +1,6 @@
 /*
-  TODO
+  Equipment Tools:
+  Using, (Un)Equiping, Drop/Pick up
  */
 // Import Third-Party
 use tcod::colors::*;

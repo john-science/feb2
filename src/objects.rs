@@ -1,5 +1,9 @@
 /*
-  TODO
+  Crucial Data Structures
+
+  * Object
+  * Game
+  * Item, Slot, Equipment, Fighter
  */
 use serde::{Deserialize, Serialize};
 use tcod::colors::*;

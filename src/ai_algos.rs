@@ -1,5 +1,5 @@
 /*
-  TODO
+  A central place for AI action algorithms
  */
 // Import Third-Party
 use rand::Rng;
@@ -13,6 +13,9 @@ use crate::objects::Ai;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::utils::mut_two;
+
+// TODO: This logic could support movement speed.
+// TODO: We should support "patroling" NPCs, that move even when the Player isn't around.
 
 
 // Dispatch method to choose an AI algo to move the NPC

@@ -107,9 +107,10 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
     // attacked and doesn't move
     game.messages.add(
         format!(
-            "{} is dead! You gain {} experience points.",  // TODO: It's not death.
+            "{} is dead! ({} XP / {} K)",  // TODO: It's not death.
             npc.name,
-            npc.fighter.unwrap().xp
+            npc.fighter.unwrap().xp,
+            npc.fighter.unwrap().xp * (game.map_level as i32)
         ),
         ORANGE,
     );
@@ -231,6 +232,7 @@ impl Object {
             if let Some(xp) = target.take_damage(damage, game) {
                 // yield experience to the player
                 self.fighter.as_mut().unwrap().xp += xp;
+                self.fighter.as_mut().unwrap().karma -= xp * (game.map_level as i32);
             }
         } else {
             game.messages.add(

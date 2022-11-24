@@ -117,7 +117,9 @@ pub fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, ob
             LIGHT_BLUE,
         );
         if let Some(xp) = objects[npc_id].take_damage(LIGHTNING_DAMAGE, game) {
+            // TODO: DRY - upon NPC death
             objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
+            objects[PLAYER].fighter.as_mut().unwrap().karma -= xp * (game.map_level as i32);
         }
         return UseResult::UsedUp;
     } else {
@@ -171,6 +173,7 @@ pub fn cast_fireball(
         }
     }
     objects[PLAYER].fighter.as_mut().unwrap().xp += xp_to_gain;
+    objects[PLAYER].fighter.as_mut().unwrap().karma -= xp_to_gain * (game.map_level as i32);
 
     UseResult::UsedUp
 }

@@ -64,6 +64,9 @@ const LEVEL_UP_FACTOR: i32 = 150;
 const LEVEL_SCREEN_WIDTH: i32 = 40;
 
 
+// TODO: Display player level AND map level
+// TODO: Display Karma (no bar)
+// TODO: Display XP bar
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
 

@@ -1,6 +1,9 @@
 /*
   Rendering the User Interface
  */
+// Import Std Libs
+use std::collections::HashMap;
+
 // Import Third-Party
 use tcod::colors::*;
 use tcod::console::*;
@@ -17,7 +20,6 @@ use crate::objects::Object;
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 
 
-// TODO: Fails for multiple items in a pile.
 // return a string with the names of all objects under the mouse
 fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
     let (x, y) = (mouse.cx as i32, mouse.cy as i32);
@@ -29,7 +31,33 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
         .map(|obj| obj.name.clone())
         .collect::<Vec<_>>();
 
-    names.join(", ") // join the names, separated by commas
+    // find duplicate items, if any
+    let mut name_map = HashMap::new();  // TODO: Add type
+    for nomen in names.iter() {
+        if name_map.contains_key(nomen) {
+            let count = *name_map.get(nomen).unwrap();
+            name_map.insert(nomen, count + 1);
+        } else {
+            name_map.insert(nomen, 1);
+        }
+    }
+
+    // pretty-print names like: healing potion x2
+    let mut dedup = String::new();
+    for (nomen, count) in name_map.iter() {
+        if *count == 1 {
+            dedup.push_str(nomen);
+        }
+        else if *count > 1 {
+            dedup.push_str(&format!("{} x{}", nomen , count).to_string());
+        }
+        dedup.push_str(", ");
+    }
+
+    // remove trailing ", "
+    dedup.pop();
+    dedup.pop();
+    dedup
 }
 
 
@@ -106,10 +134,10 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         3,
         BackgroundFlag::None,
         TextAlignment::Left,
-        format!("Level: {}", game.map_level),  // TODO: working... levels or?
+        format!("Level: {}", game.map_level),  // TODO: naming... levels? Does Purgatory have levels?
     );
 
-    // TODO: fails for multiple items on the same tile.
+    // TODO: panics if string is too long.
     // display names of objects under the mouse
     tcod.panel.set_default_foreground(LIGHT_GREY);
     tcod.panel.print_ex(

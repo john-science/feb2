@@ -123,8 +123,6 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
 
-    // TODO: Move NPC table to tables.rs
-    // TODO: Switch from "npc" to "npc
     // maximum number of npcs per room
     let max_npcs = from_map_level(
         &[
@@ -157,8 +155,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         level,
     );
 
-    // TODO: Move NPC table to tables.rs
-    let npc_chances = &mut [  // TODO: Change name to npc_table
+    let npc_chances = &mut [
         Weighted {
             weight: 80,
             item: "orc",  // TODO: const NPC_ORC: i32 = 0;
@@ -225,7 +222,6 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         level,
     );
 
-    // TODO: move loot table to tables.rs
     // item random table
     let item_chances = &mut [
         Weighted {

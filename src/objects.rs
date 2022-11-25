@@ -107,7 +107,7 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
     // attacked and doesn't move
     game.messages.add(
         format!(
-            "{} is dead! ({} XP / {} K)",  // TODO: It's not death.
+            "{} is dead! (+{}XP / -{}K)",  // TODO: It's not death.
             npc.name,
             npc.fighter.unwrap().xp,
             npc.fighter.unwrap().xp * (game.map_level as i32)
@@ -126,11 +126,11 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
 // combat-related properties and methods (player or NPC)
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {
-    pub hp: i32,  // TODO: u32?
-    pub base_max_hp: i32,  // TODO: u32?
+    pub hp: i32,
+    pub base_max_hp: u32,
     pub base_defense: i32,
     pub base_power: i32,
-    pub xp: i32,  // TODO: u32?
+    pub xp: i32,
     pub karma: i32,
     pub on_death: DeathCallback,
 }
@@ -337,7 +337,7 @@ impl Object {
     }
 
     pub fn max_hp(&self, game: &Game) -> i32 {
-        let base_max_hp = self.fighter.map_or(0, |f| f.base_max_hp);
+        let base_max_hp = self.fighter.map_or(0, |f| f.base_max_hp) as i32;
         let bonus: i32 = self
             .get_all_equipped(game)
             .iter()

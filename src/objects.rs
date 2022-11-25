@@ -229,6 +229,9 @@ impl Object {
                 WHITE
             );
 
+            // bonus karma loss for damage done
+            self.fighter.as_mut().unwrap().karma -= (damage as f64).sqrt() as i32;
+
             if let Some(xp) = target.take_damage(damage, game) {
                 // yield experience to the player
                 self.fighter.as_mut().unwrap().xp += xp;

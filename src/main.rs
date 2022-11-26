@@ -31,6 +31,7 @@ use constants::CHARACTER_SCREEN_WIDTH;
 use constants::FONT_IMG;
 use constants::GAME_TITLE;
 use constants::KARMA_TO_ASCEND;
+use constants::LIMIT_FPS;
 use constants::MAP_HEIGHT;
 use constants::MAP_WIDTH;
 use constants::MAX_LVL;
@@ -60,9 +61,6 @@ use objects::Slot;
 use player::level_up;
 use player::xp_to_level_up;
 use ui::render_all;
-
-// 20 frames-per-second maximum
-const LIMIT_FPS: i32 = 20;
 
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.

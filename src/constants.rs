@@ -12,6 +12,9 @@ pub const SAVE_FILE: &str = ".feb2.savegame";
 // player will always be the first object
 pub const PLAYER: usize = 0;
 
+// 20 frames-per-second maximum
+pub const LIMIT_FPS: i32 = 20;
+
 // experience and level-ups (BASE + level * FACTOR)
 pub const LEVEL_UP_BASE: i32 = 200;
 pub const LEVEL_UP_FACTOR: i32 = 150;

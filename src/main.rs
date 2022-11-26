@@ -35,6 +35,7 @@ use constants::MAP_WIDTH;
 use constants::MAX_LVL;
 use constants::PANEL_HEIGHT;
 use constants::PLAYER;
+use constants::SAVE_FILE;
 use constants::SCREEN_HEIGHT;
 use constants::SCREEN_WIDTH;
 use equipment::drop_item;
@@ -339,7 +340,7 @@ fn initialise_fov(tcod: &mut Tcod, map: &Map) {
 //       But the save games are human-readable, storable, and editable.
 fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
     let save_data = serde_json::to_string(&(game, objects))?;
-    let mut file = File::create(".save.game")?;
+    let mut file = File::create(SAVE_FILE)?;
     file.write_all(save_data.as_bytes())?;
     Ok(())
 }
@@ -348,7 +349,7 @@ fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
 // TODO: We need to save the game version, so we can check it at load time.
 fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
     let mut json_save_state = String::new();
-    let mut file = File::open(".save.game")?;
+    let mut file = File::open(SAVE_FILE)?;
     file.read_to_string(&mut json_save_state)?;
     let result = serde_json::from_str::<(Game, Vec<Object>)>(&json_save_state)?;
     Ok(result)

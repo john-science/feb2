@@ -7,6 +7,7 @@ use tcod::colors::Color;
 pub const GAME_TITLE: &str = "February Second";
 pub const AUTHOR_LINE: &str = "by John Science";
 pub const FONT_IMG: &str = "dejavu16x16.png";
+pub const SAVE_FILE: &str = ".feb2.savegame";
 
 // player will always be the first object
 pub const PLAYER: usize = 0;

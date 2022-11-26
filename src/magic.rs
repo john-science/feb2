@@ -116,7 +116,8 @@ pub fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, ob
             ),
             LIGHT_BLUE,
         );
-        if let Some(xp) = objects[npc_id].take_damage(LIGHTNING_DAMAGE, game) {
+        let xp = objects[npc_id].take_damage(LIGHTNING_DAMAGE, game);
+        if xp > 0 {
             // TODO: DRY - upon NPC death
             objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
             objects[PLAYER].fighter.as_mut().unwrap().karma -= xp * (game.map_level as i32);
@@ -164,7 +165,8 @@ pub fn cast_fireball(
                 ),
                 ORANGE,
             );
-            if let Some(xp) = obj.take_damage(FIREBALL_DAMAGE, game) {
+            let xp = obj.take_damage(FIREBALL_DAMAGE, game);
+            if xp > 0 {
                 if id != PLAYER {
                     // Don't reward the player for burning themself.
                     xp_to_gain += xp;

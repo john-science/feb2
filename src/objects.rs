@@ -196,8 +196,7 @@ impl Object {
         return ((dx.pow(2) + dy.pow(2)) as f32).sqrt();
     }
 
-    // TODO: What is the benefit of returning Option over i32?  Just return 0 xp, right?
-    pub fn take_damage(&mut self, damage: i32, game: &mut Game) -> Option<i32> {
+    pub fn take_damage(&mut self, damage: i32, game: &mut Game) -> i32 {
         // apply damage if possible
         if let Some(fighter) = self.fighter.as_mut() {
             if damage > 0 {
@@ -210,10 +209,10 @@ impl Object {
             if fighter.hp <= 0 {
                 self.alive = false;
                 fighter.on_death.callback(self, game);
-                return Some(fighter.xp);
+                return fighter.xp;
             }
         }
-        return None;
+        return 0;
     }
 
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
@@ -232,7 +231,8 @@ impl Object {
             // bonus karma loss for damage done
             self.fighter.as_mut().unwrap().karma -= (damage as f64).sqrt() as i32;
 
-            if let Some(xp) = target.take_damage(damage, game) {
+            let xp = target.take_damage(damage, game);
+            if xp > 0 {
                 // yield experience to the player
                 self.fighter.as_mut().unwrap().xp += xp;
                 self.fighter.as_mut().unwrap().karma -= xp * (game.map_level as i32);

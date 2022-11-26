@@ -14,5 +14,5 @@ Cargo.lock
 *.pdb
 
 # Game Savefiles
-savegame*
-.save.*
+*savegame
+

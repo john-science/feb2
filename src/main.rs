@@ -159,6 +159,7 @@ enum PlayerAction {
 }
 
 
+// TODO: Hitting "?" should pop up a command menu. (Could we make this more configurable/automatic?)
 // TODO: Fullscreen isn't working.
 fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
     use tcod::input::KeyCode::*;

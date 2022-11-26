@@ -134,7 +134,8 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         3,
         BackgroundFlag::None,
         TextAlignment::Left,
-        format!("Level: {}", game.map_level),  // TODO: naming... levels? Does Purgatory have levels?
+        //format!("Lvl {}: {}", game.map_level, value(LVL_NAMES.get((game.map_level - 1) as usize))),
+        format!("Lvl {}: {}", game.map_level, LVL_NAMES[(game.map_level - 1) as usize]),
     );
 
     // TODO: panics if string is too long.

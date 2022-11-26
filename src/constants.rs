@@ -55,5 +55,13 @@ pub const ROOM_MIN_SIZE: i32 = 6;
 pub const MAX_ROOMS: i32 = 32;
 
 // parameters for game size
-pub const MAX_LVL: u32 = 21;  // TODO: Game balance
-pub const KARMA_TO_ASCEND: i32 = 1000;  // TODO: Game balance
+pub const MAX_LVL: u32 = 21;
+pub const KARMA_TO_ASCEND: i32 = 1000;
+// NOTE: These strings should be <= 13 chars long
+pub const LVL_NAMES: [&'static str; MAX_LVL as usize] = [
+	"The Pit", "Well of Souls", "Well of Souls", "Well of Souls", "Labyrinth",
+	"The Abyss", "The Abyss", "The Abyss", "Despair", "The Treches",
+	"Catacombs", "Catacombs", "Catacombs", "Catacombs", "Catacombs",
+	"Tombs", "Tombs", "Underdark", "Underdark", "Underdark",
+	"Gateway"
+];

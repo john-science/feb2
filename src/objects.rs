@@ -90,7 +90,6 @@ impl DeathCallback {
 }
 
 
-// TODO: restart game
 fn player_death(player: &mut Object, game: &mut Game) {
     // the game ended!
     game.messages.add("You died!", RED);

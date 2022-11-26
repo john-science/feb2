@@ -16,6 +16,7 @@ use crate::menus::render_bar;
 use crate::menus::Tcod;
 use crate::objects::Game;
 use crate::objects::Object;
+use crate::player::xp_to_level_up;
 
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 
@@ -114,8 +115,8 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     tcod.panel.set_default_background(BLACK);
     tcod.panel.clear();
 
-    // show the player's stats
-    let hp = objects[PLAYER].fighter.map_or(0, |f| f.hp);
+    // show the player's HP
+    let hp = objects[PLAYER].fighter.unwrap().hp;
     let max_hp = objects[PLAYER].max_hp(game);
     render_bar(
         &mut tcod.panel,
@@ -129,16 +130,30 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         DARKER_RED,
     );
 
+    // show the player's XP
+    let xp = objects[PLAYER].fighter.unwrap().xp;
+    let level_up_xp = xp_to_level_up(objects[PLAYER].level);
+    render_bar(
+        &mut tcod.panel,
+        1,
+        2,
+        BAR_WIDTH,
+        "XP",
+        xp,
+        level_up_xp,
+        LIGHT_GREY,
+        DARKER_GREY,
+    );
+
     tcod.panel.print_ex(
         1,
-        3,
+        5,
         BackgroundFlag::None,
         TextAlignment::Left,
-        //format!("Lvl {}: {}", game.map_level, value(LVL_NAMES.get((game.map_level - 1) as usize))),
         format!("Lvl {}: {}", game.map_level, LVL_NAMES[(game.map_level - 1) as usize]),
     );
 
-    // TODO: panics if string is too long.
+    // TODO: panic scrolls if string is too long.
     // display names of objects under the mouse
     tcod.panel.set_default_foreground(LIGHT_GREY);
     tcod.panel.print_ex(

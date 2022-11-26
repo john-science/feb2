@@ -21,6 +21,7 @@ mod map;
 mod menus;
 mod moves;
 mod objects;
+mod player;
 mod transition;
 mod ui;
 mod utils;
@@ -56,15 +57,12 @@ use objects::Game;
 use objects::Item;
 use objects::Object;
 use objects::Slot;
+use player::level_up;
+use player::xp_to_level_up;
 use ui::render_all;
 
 // 20 frames-per-second maximum
 const LIMIT_FPS: i32 = 20;
-
-// experience and level-ups (BASE + level * FACTOR)
-const LEVEL_UP_BASE: i32 = 200;
-const LEVEL_UP_FACTOR: i32 = 150;
-const LEVEL_SCREEN_WIDTH: i32 = 40;
 
 
 // TODO: Display player level AND map level
@@ -72,54 +70,6 @@ const LEVEL_SCREEN_WIDTH: i32 = 40;
 // TODO: Display XP bar
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
-
-
-fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
-    let player = &mut objects[PLAYER];
-    let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
-    // see if the player's experience is enough to level-up
-    if player.fighter.as_ref().map_or(0, |f| f.xp) >= level_up_xp {
-        player.level += 1;
-        game.messages.add(
-            format!(
-                "Your battle skills grow stronger! You reached level {}!",
-                player.level
-            ),
-            YELLOW,
-        );
-
-        // Let the player choose a stat to level up
-        let fighter = player.fighter.as_mut().unwrap();
-        let mut choice = None;
-        while choice.is_none() {
-            // keep asking until a choice is made
-            choice = menu(
-                "Level up! Choose a stat to raise:\n",
-                &[
-                    format!("Constitution (+20 HP, from {})", fighter.base_max_hp),
-                    format!("Strength (+1 attack, from {})", fighter.base_power),
-                    format!("Agility (+1 defense, from {})", fighter.base_defense),
-                ],
-                LEVEL_SCREEN_WIDTH,
-                &mut tcod.root,
-            );
-        }
-        fighter.xp -= level_up_xp;
-        match choice.unwrap() {
-            0 => {
-                fighter.base_max_hp += 20;
-                fighter.hp += 20;
-            }
-            1 => {
-                fighter.base_power += 1;
-            }
-            2 => {
-                fighter.base_defense += 1;
-            }
-            _ => unreachable!(),
-        }
-    }
-}
 
 
 // Advance to the next level
@@ -238,13 +188,12 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
             return DidntTakeTurn;
         }
 
-        // TODO: Make an XP bar
         // TODO: Combine inventory and character stuff?
         (Key { code: Text, .. }, "c", true) => {
             // show character information
             let player = &objects[PLAYER];
             let level = player.level;
-            let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
+            let level_up_xp = xp_to_level_up(player.level);
             if let Some(fighter) = player.fighter.as_ref() {
                 let msg = format!(
 "Character information

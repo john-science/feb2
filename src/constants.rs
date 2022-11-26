@@ -12,6 +12,11 @@ pub const SAVE_FILE: &str = ".feb2.savegame";
 // player will always be the first object
 pub const PLAYER: usize = 0;
 
+// experience and level-ups (BASE + level * FACTOR)
+pub const LEVEL_UP_BASE: i32 = 200;
+pub const LEVEL_UP_FACTOR: i32 = 150;
+pub const LEVEL_SCREEN_WIDTH: i32 = 40;
+
 // actual size of the window
 pub const SCREEN_WIDTH: i32 = 80;
 pub const SCREEN_HEIGHT: i32 = 50;
@@ -60,7 +65,7 @@ pub const KARMA_TO_ASCEND: i32 = 1000;
 // NOTE: These strings should be <= 13 chars long
 pub const LVL_NAMES: [&'static str; MAX_LVL as usize] = [
 	"The Pit", "Well of Souls", "Well of Souls", "Well of Souls", "Labyrinth",
-	"The Abyss", "The Abyss", "The Abyss", "Despair", "The Treches",
+	"The Abyss", "The Abyss", "The Abyss", "Despair", "The Trenches",
 	"Catacombs", "Catacombs", "Catacombs", "Catacombs", "Catacombs",
 	"Tombs", "Tombs", "Underdark", "Underdark", "Underdark",
 	"Gateway"

@@ -64,7 +64,6 @@ use ui::render_all;
 // 20 frames-per-second maximum
 const LIMIT_FPS: i32 = 20;
 
-// TODO: Display Karma (no bar)
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
 

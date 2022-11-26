@@ -145,6 +145,16 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         DARKER_GREY,
     );
 
+    // show the player's karma
+    let karma = objects[PLAYER].fighter.unwrap().karma;
+    tcod.panel.print_ex(
+        1,
+        3,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        format!("Karma: {}", karma),
+    );
+
     tcod.panel.print_ex(
         1,
         5,

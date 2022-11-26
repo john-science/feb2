@@ -64,13 +64,9 @@ use ui::render_all;
 // 20 frames-per-second maximum
 const LIMIT_FPS: i32 = 20;
 
-
-// TODO: Display player level AND map level
 // TODO: Display Karma (no bar)
-// TODO: Display XP bar
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
-
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {
@@ -200,8 +196,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
 
 Karma: {}
 Level: {}
-Experience: {}
-Experience to level up: {}
+Experience: {} of {}
 
 Maximum HP: {}
 Attack: {}

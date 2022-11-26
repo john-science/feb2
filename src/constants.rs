@@ -52,3 +52,7 @@ pub const FIREBALL_DAMAGE: i32 = 25;
 pub const ROOM_MAX_SIZE: i32 = 12;
 pub const ROOM_MIN_SIZE: i32 = 6;
 pub const MAX_ROOMS: i32 = 32;
+
+// parameters for game size
+pub const MAX_LVL: u32 = 21;  // TODO: Game balance
+pub const KARMA_TO_ASCEND: i32 = 1000;  // TODO: Game balance

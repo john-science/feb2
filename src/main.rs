@@ -29,8 +29,10 @@ use constants::AUTHOR_LINE;
 use constants::CHARACTER_SCREEN_WIDTH;
 use constants::FONT_IMG;
 use constants::GAME_TITLE;
+use constants::KARMA_TO_ASCEND;
 use constants::MAP_HEIGHT;
 use constants::MAP_WIDTH;
+use constants::MAX_LVL;
 use constants::PANEL_HEIGHT;
 use constants::PLAYER;
 use constants::SCREEN_HEIGHT;
@@ -120,14 +122,31 @@ fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
 
 
 // Advance to the next level
-fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
-    game.messages.add(
-        "You ascend higher into Purgatory...",
-        RED,
-    );
-    game.map_level += 1;
-    game.map = make_map(objects, game.map_level);
-    initialise_fov(tcod, &game.map);
+fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {
+    if game.map_level == MAX_LVL {
+        if objects[PLAYER].fighter.unwrap().karma >= KARMA_TO_ASCEND {
+            game.messages.add(
+                "You ascend from Purgatory.",
+                RED,
+            );
+            return false;
+        } else {
+            game.messages.add(
+                "Your karma is too low to leave Purgatory.",
+                RED,
+            );
+            return false;
+        }
+    } else {
+        game.messages.add(
+            "You ascend higher into Purgatory...",
+            RED,
+        );
+        game.map_level += 1;
+        game.map = make_map(objects, game.map_level);
+        initialise_fov(tcod, &game.map);
+    }
+    return true;
 }
 
 
@@ -206,12 +225,18 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
                 .iter()
                 .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
             if player_on_stairs {
-                next_level(tcod, game, objects);
+                let success: bool = next_level(tcod, game, objects);
+                if success {
+                    // TODO: If game.level > MAX_LVL: return WinExit
+                    return TookTurn;
+                } else {
+                    return DidntTakeTurn;
+                }
             }
             return DidntTakeTurn;
         }
 
-        // TODO: Maybe make an XP bar?
+        // TODO: Make an XP bar
         // TODO: Combine inventory and character stuff?
         (Key { code: Text, .. }, "c", true) => {
             // show character information

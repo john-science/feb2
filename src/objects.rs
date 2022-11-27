@@ -122,6 +122,8 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
 }
 
 
+// TODO: Add skills
+// TODO: Move inventory here.
 // combat-related properties and methods (player or NPC)
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {
@@ -132,6 +134,24 @@ pub struct Fighter {
     pub xp: i32,
     pub karma: i32,
     pub on_death: DeathCallback,
+}
+
+
+impl Fighter {
+    // TODO: USE this constructor!
+    // TODO: Option<DeathCallback>, and karma, base_max_hp, xp
+    // TODO: Add inventory here
+    pub fn new(hp: i32, base_defense: i32, base_power: i32, xp: i32, karma: i32, on_death: DeathCallback) -> Self {
+        Fighter {
+            base_max_hp: hp as u32,
+            hp: hp,
+            base_defense: base_defense,
+            base_power: base_power,
+            xp: xp,
+            karma: karma,
+            on_death: on_death,
+        }
+    }
 }
 
 

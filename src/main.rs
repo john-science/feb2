@@ -301,15 +301,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
-    player.fighter = Some(Fighter {
-        base_max_hp: 100,  // TODO: These numbers seem like they should be constants, or config?
-        hp: 100,
-        base_defense: 2,
-        base_power: 3,
-        xp: 0,
-        karma: -1000,
-        on_death: DeathCallback::Player,
-    });
+    player.fighter = Some(Fighter::new(100, 2, 3, 0, -1000, DeathCallback::Player));
 
     // the list of objects with those two
     let mut objects = vec![player];

@@ -26,7 +26,6 @@ pub struct Tcod {
 }
 
 
-// TODO: Why does this return an Option, not an i32? Couldn't we just return 0, not None?
 pub fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option<usize> {
     // show a menu with each item of the inventory as an option
     let options = if inventory.len() == 0 {

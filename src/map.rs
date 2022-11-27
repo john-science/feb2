@@ -171,30 +171,15 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                     // create an orc
                     let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
                     orc.ai = Some(Ai::Basic);
-                    orc.fighter = Some(Fighter {
-                        base_max_hp: 20,
-                        hp: 20,
-                        base_defense: 0,
-                        base_power: 4,
-                        xp: 35,
-                        karma: -1000,
-                        on_death: DeathCallback::Npc,
-                    });
+                    orc.fighter = Some(Fighter::new(20, 0, 4, 35, -1000, DeathCallback::Npc));
                     orc
                 }
                 "troll" => {
                     // create a troll
                     let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
                     troll.ai = Some(Ai::Basic);
-                    troll.fighter = Some(Fighter {
-                        base_max_hp: 30,
-                        hp: 30,
-                        base_defense: 2,
-                        base_power: 8,
-                        xp: 100,
-                        karma: -1000,
-                        on_death: DeathCallback::Npc,
-                    });
+                    troll.fighter = Some(Fighter::new(30, 2, 8, 100, -1000, DeathCallback::Npc));
+                    // TODO: Trolls should start at this HP, but with double base_max_hp
                 troll
                 }
                 _ => unreachable!(),

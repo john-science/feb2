@@ -108,8 +108,8 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
         format!(
             "{} is dead! (+{}XP / -{}K)",  // TODO: It's not death.
             npc.name,
-            npc.fighter.unwrap().xp,
-            npc.fighter.unwrap().xp * (game.map_level as i32)
+            npc.fighter.as_ref().unwrap().xp,
+            npc.fighter.as_ref().unwrap().xp * (game.map_level as i32)
         ),
         ORANGE,
     );
@@ -123,9 +123,8 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
 
 
 // TODO: Add skills
-// TODO: Move inventory here.
 // combat-related properties and methods (player or NPC)
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {
     pub hp: i32,
     pub base_max_hp: u32,
@@ -134,11 +133,12 @@ pub struct Fighter {
     pub xp: i32,
     pub karma: i32,
     pub on_death: DeathCallback,
+    pub inventory: Vec<Object>,
 }
 
 
 impl Fighter {
-    // TODO: Add inventory here
+    // TODO: use this inventory
     pub fn new(hp: i32, base_defense: i32, base_power: i32, xp: i32, is_npc: bool) -> Self {
         let on_death: DeathCallback = if is_npc {
             DeathCallback::Npc
@@ -154,6 +154,7 @@ impl Fighter {
             xp: xp,
             karma: -1000,
             on_death: on_death,
+            inventory: vec![],
         }
     }
 }
@@ -161,7 +162,7 @@ impl Fighter {
 
 // This is a generic object: the player, a npc, an item, the stairs...
 // It's represented by a character on screen (unless it's in an inventory).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Object {
     pub x: i32,
     pub y: i32,
@@ -228,14 +229,16 @@ impl Object {
         }
 
         // check for death, call the death function
-        if let Some(fighter) = self.fighter {
+        let mut xp: i32 = 0;
+        if let Some(fighter) = self.fighter.as_mut() {
             if fighter.hp <= 0 {
                 self.alive = false;
+                xp = fighter.xp;
                 fighter.on_death.callback(self, game);
-                return fighter.xp;
             }
         }
-        return 0;
+
+        return xp;
     }
 
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
@@ -340,7 +343,7 @@ impl Object {
     }
 
     pub fn power(&self, game: &Game) -> i32 {
-        let base_power = self.fighter.map_or(0, |f| f.base_power);
+        let base_power = self.fighter.as_ref().map_or(0, |f| f.base_power);
         let bonus: i32 = self
             .get_all_equipped(game)
             .iter()
@@ -350,7 +353,7 @@ impl Object {
     }
 
     pub fn defense(&self, game: &Game) -> i32 {
-        let base_defense = self.fighter.map_or(0, |f| f.base_defense);
+        let base_defense = self.fighter.as_ref().map_or(0, |f| f.base_defense);
         let bonus: i32 = self
             .get_all_equipped(game)
             .iter()
@@ -360,7 +363,7 @@ impl Object {
     }
 
     pub fn max_hp(&self, game: &Game) -> i32 {
-        let base_max_hp = self.fighter.map_or(0, |f| f.base_max_hp) as i32;
+        let base_max_hp = self.fighter.as_ref().map_or(0, |f| f.base_max_hp) as i32;
         let bonus: i32 = self
             .get_all_equipped(game)
             .iter()

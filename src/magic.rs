@@ -189,7 +189,7 @@ pub fn cast_heal(
 ) -> UseResult {
     // heal the player
     let player = &mut objects[PLAYER];
-    if let Some(fighter) = player.fighter {
+    if let Some(fighter) = player.fighter.as_ref() {
         if fighter.hp == player.max_hp(game) {
             game.messages.add("You are already at full health.", RED);
             return UseResult::Cancelled;

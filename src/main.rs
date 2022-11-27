@@ -67,7 +67,7 @@ use ui::render_all;
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {
     if game.map_level == MAX_LVL {
-        if objects[PLAYER].fighter.unwrap().karma >= KARMA_TO_ASCEND {
+        if objects[PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
             game.messages.add(
                 "You ascend from Purgatory.",
                 RED,

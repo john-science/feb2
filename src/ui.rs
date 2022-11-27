@@ -14,6 +14,7 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 use crate::constants::*;  // TODO: Will the complier make this more efficient for me?
 use crate::menus::render_bar;
 use crate::menus::Tcod;
+use crate::objects::Fighter;
 use crate::objects::Game;
 use crate::objects::Object;
 use crate::player::xp_to_level_up;
@@ -116,7 +117,8 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     tcod.panel.clear();
 
     // show the player's HP
-    let hp = objects[PLAYER].fighter.unwrap().hp;
+    let player_fighter: &Fighter = objects[PLAYER].fighter.as_ref().unwrap();
+    let hp = player_fighter.hp;
     let max_hp = objects[PLAYER].max_hp(game);
     render_bar(
         &mut tcod.panel,
@@ -131,7 +133,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     );
 
     // show the player's XP
-    let xp = objects[PLAYER].fighter.unwrap().xp;
+    let xp = player_fighter.xp;
     let level_up_xp = xp_to_level_up(objects[PLAYER].level);
     render_bar(
         &mut tcod.panel,
@@ -146,7 +148,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     );
 
     // show the player's karma
-    let karma = objects[PLAYER].fighter.unwrap().karma;
+    let karma = player_fighter.karma;
     tcod.panel.print_ex(
         1,
         3,

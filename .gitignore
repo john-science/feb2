@@ -16,3 +16,6 @@ Cargo.lock
 # Game Savefiles
 *savegame
 
+# Editor Artifacts
+*.swp
+

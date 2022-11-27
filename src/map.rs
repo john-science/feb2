@@ -139,18 +139,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // npc random table
     let troll_chance = from_map_level(
         &[
-            Transition {
-                level: 3,
-                value: 15,
-            },
-            Transition {
-                level: 5,
-                value: 30,
-            },
-            Transition {
-                level: 7,
-                value: 60,
-            },
+            Transition { level: 3, value: 15 },
+            Transition { level: 5, value: 30 },
+            Transition { level: 7, value: 60 },
         ],
         level,
     );
@@ -158,7 +149,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     let npc_chances = &mut [
         Weighted {
             weight: 80,
-            item: "orc",  // TODO: const NPC_ORC: i32 = 0;
+            item: "orc",  // TODO: const NPC_ORC: &str = "orc";
         },
         Weighted {
             weight: troll_chance,

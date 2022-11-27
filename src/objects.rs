@@ -366,4 +366,5 @@ pub struct Game {
     pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
     pub inventory: Vec<Object>,
     pub map_level: u32,
+    pub version: String,
 }

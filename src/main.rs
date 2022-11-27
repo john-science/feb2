@@ -288,7 +288,6 @@ fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
 }
 
 
-// TODO: We need to save the game version, so we can check it at load time.
 fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
     let mut json_save_state = String::new();
     let mut file = File::open(SAVE_FILE)?;
@@ -322,6 +321,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         messages: Messages::new(),
         inventory: vec![],
         map_level: 1,
+        version: env!("CARGO_PKG_VERSION").to_string(),
     };
 
     // initial equipment: a dagger
@@ -392,6 +392,25 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
 }
 
 
+fn load_version_equals(tcod: &mut Tcod, game: &Game) -> bool {
+    let this_version: String = env!("CARGO_PKG_VERSION").to_string();
+
+    if !game.version.eq(&this_version) {
+        let mut load_err: String = "ERROR Loading Game\n\nCannot load save game, because it is the wrong version.\n".to_string();
+        load_err.push_str("\nsave game version: ");
+        load_err.push_str(&game.version);
+        load_err.push_str("\nload game version: ");
+        load_err.push_str(&this_version);
+
+        msgbox(&load_err, 32, &mut tcod.root);
+
+        return false;
+    } else {
+        return true;
+    }
+}
+
+
 fn main_menu(tcod: &mut Tcod) {
     let img = tcod::image::Image::from_file("menu_background.png")
         .ok()
@@ -431,8 +450,12 @@ fn main_menu(tcod: &mut Tcod) {
                 // load game
                 match load_game() {
                     Ok((mut game, mut objects)) => {
-                        initialise_fov(tcod, &game.map);
-                        play_game(tcod, &mut game, &mut objects);
+                        if !load_version_equals(tcod, &game) {
+                            continue;
+                        } else {
+                            initialise_fov(tcod, &game.map);
+                            play_game(tcod, &mut game, &mut objects);
+                        }
                     }
                     Err(_e) => {
                         msgbox("\nNo saved game to load.\n", 24, &mut tcod.root);

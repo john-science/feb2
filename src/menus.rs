@@ -102,7 +102,7 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
     // blit the contents of "window" to the root console
     let x = SCREEN_WIDTH / 2 - width / 2;
     let y = SCREEN_HEIGHT / 2 - height / 2;
-    blit(&window, (0, 0), (width, height), root, (x, y), 1.0, 0.7);
+    blit(&window, (0, 0), (width, height), root, (x, y), 1.0, 0.9);
 
     // present the root console to the player and wait for a key-press
     root.flush();

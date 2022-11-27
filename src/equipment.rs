@@ -57,7 +57,7 @@ fn toggle_equipment(
 
 
 
-// TODO: Some items should stack, like health potions, and money.
+// TODO: Some items should stack, like scrolls. Maybe health pots.
 // add to the player's inventory and remove from the map
 pub fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
     if game.inventory.len() >= 26 {

@@ -138,17 +138,21 @@ pub struct Fighter {
 
 
 impl Fighter {
-    // TODO: USE this constructor!
-    // TODO: Option<DeathCallback>, and karma, base_max_hp, xp
     // TODO: Add inventory here
-    pub fn new(hp: i32, base_defense: i32, base_power: i32, xp: i32, karma: i32, on_death: DeathCallback) -> Self {
+    pub fn new(hp: i32, base_defense: i32, base_power: i32, xp: i32, is_npc: bool) -> Self {
+        let on_death: DeathCallback = if is_npc {
+            DeathCallback::Npc
+        } else {
+            DeathCallback::Player
+        };
+
         Fighter {
             base_max_hp: hp as u32,
             hp: hp,
             base_defense: base_defense,
             base_power: base_power,
             xp: xp,
-            karma: karma,
+            karma: -1000,
             on_death: on_death,
         }
     }

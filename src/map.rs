@@ -18,7 +18,6 @@ use crate::constants::ROOM_MIN_SIZE;
 use crate::constants::ROOM_MAX_SIZE;
 use crate::moves::is_blocked;
 use crate::objects::Ai;
-use crate::objects::DeathCallback;
 use crate::objects::Equipment;
 use crate::objects::Fighter;
 use crate::objects::Item;
@@ -171,15 +170,16 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                     // create an orc
                     let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
                     orc.ai = Some(Ai::Basic);
-                    orc.fighter = Some(Fighter::new(20, 0, 4, 35, -1000, DeathCallback::Npc));
+                    orc.fighter = Some(Fighter::new(20, 0, 4, 35, true));
                     orc
                 }
                 "troll" => {
                     // create a troll
                     let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
                     troll.ai = Some(Ai::Basic);
-                    troll.fighter = Some(Fighter::new(30, 2, 8, 100, -1000, DeathCallback::Npc));
-                    // TODO: Trolls should start at this HP, but with double base_max_hp
+                    let mut fighter: Fighter = Fighter::new(60, 2, 8, 100, true);
+                    fighter.hp = 30;  // trolls start at half health
+                    troll.fighter = Some(fighter);
                 troll
                 }
                 _ => unreachable!(),

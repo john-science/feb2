@@ -51,7 +51,6 @@ use menus::Messages;
 use menus::msgbox;
 use menus::Tcod;
 use moves::player_move_or_attack;
-use objects::DeathCallback;
 use objects::Equipment;
 use objects::Fighter;
 use objects::Game;
@@ -301,7 +300,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
-    player.fighter = Some(Fighter::new(100, 2, 3, 0, -1000, DeathCallback::Player));
+    player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
     // the list of objects with those two
     let mut objects = vec![player];

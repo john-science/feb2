@@ -61,6 +61,7 @@ use player::level_up;
 use player::xp_to_level_up;
 use ui::render_all;
 
+// TODO: Game.map should be game.maps. Step 1 on the way to building down stairs.
 // TODO: The color of potions, or maybe the font, is hard to read.
 // TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
 
@@ -101,6 +102,7 @@ enum PlayerAction {
 }
 
 
+// TODO: Key "m" should open a scrollable messages window.
 // TODO: Hitting "?" should pop up a command menu. (Could we make this more configurable/automatic?)
 // TODO: Fullscreen isn't working.
 fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
@@ -201,9 +203,9 @@ Defense: {}",
                     level,
                     fighter.xp,
                     level_up_xp,
-                    player.max_hp(game),
-                    player.power(game),
-                    player.defense(game),
+                    fighter.max_hp(),
+                    fighter.power(),
+                    fighter.defense(),
                 );
                 msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
             }

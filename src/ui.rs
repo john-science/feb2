@@ -119,7 +119,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     // show the player's HP
     let player_fighter: &Fighter = objects[PLAYER].fighter.as_ref().unwrap();
     let hp = player_fighter.hp;
-    let max_hp = objects[PLAYER].max_hp(game);
+    let max_hp = player_fighter.max_hp();
     render_bar(
         &mut tcod.panel,
         1,

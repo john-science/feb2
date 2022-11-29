@@ -95,6 +95,7 @@ fn player_death(player: &mut Object, game: &mut Game) {
     game.messages.add("You died!", RED);
 
     // for added effect, transform the player into a corpse!
+    player.alive = false;
     player.chr = '%';
     player.color = DARK_RED;
 }
@@ -113,6 +114,7 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
         ),
         ORANGE,
     );
+    npc.alive = false;
     npc.chr = '%';
     npc.color = DARK_RED;
     npc.blocks = false;
@@ -156,6 +158,52 @@ impl Fighter {
             on_death: on_death,
             inventory: vec![],
         }
+    }
+
+    // heal by the given amount, without going over the maximum
+    pub fn heal(&mut self, amount: i32) {
+        let max_hp = self.max_hp();
+        self.hp += amount;
+        if self.hp > max_hp {
+            self.hp = max_hp;
+        }
+    }
+
+
+    pub fn power(&self) -> i32 {
+        let bonus: i32 = self
+            .get_all_equipped()
+            .iter()
+            .map(|e| e.power_bonus)
+            .sum();
+        self.base_power + bonus
+    }
+
+    pub fn defense(&self) -> i32 {
+        let bonus: i32 = self
+            .get_all_equipped()
+            .iter()
+            .map(|e| e.defense_bonus)
+            .sum();
+        self.base_defense + bonus
+    }
+
+    pub fn max_hp(&self) -> i32 {
+        let bonus: i32 = self
+            .get_all_equipped()
+            .iter()
+            .map(|e| e.max_hp_bonus)
+            .sum();
+        (self.base_max_hp as i32) + bonus
+    }
+
+    // returns a list of equipped items
+    pub fn get_all_equipped(&self) -> Vec<Equipment> {
+        self.inventory
+            .iter()
+            .filter(|item| item.equipment.map_or(false, |e| e.equipped))
+            .map(|item| item.equipment.unwrap())
+            .collect()
     }
 }
 
@@ -232,7 +280,6 @@ impl Object {
         let mut xp: i32 = 0;
         if let Some(fighter) = self.fighter.as_mut() {
             if fighter.hp <= 0 {
-                self.alive = false;
                 xp = fighter.xp;
                 fighter.on_death.callback(self, game);
             }
@@ -241,9 +288,12 @@ impl Object {
         return xp;
     }
 
+    // TODO: We can't have the NPCs getting XP?  Maybe.
+    // TODO: Should this be in the Object class?
+    // TODO: Rename melee_attack
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage
-        let damage = self.power(game) - target.defense(game);
+        let damage = self.fighter.as_ref().unwrap().power() - target.fighter.as_ref().unwrap().defense();
         if damage > 0 {
             // make the target take some damage
             game.messages.add(
@@ -271,18 +321,6 @@ impl Object {
                 ),
                 WHITE
             );
-        }
-    }
-
-    // TODO: This seems like a silly place for this? Everything is on Object.
-    // heal by the given amount, without going over the maximum
-    pub fn heal(&mut self, amount: i32, game: &Game) {
-        let max_hp = self.max_hp(game);
-        if let Some(ref mut fighter) = self.fighter {
-            fighter.hp += amount;
-            if fighter.hp > max_hp {
-                fighter.hp = max_hp;
-            }
         }
     }
 
@@ -341,52 +379,10 @@ impl Object {
             );
         }
     }
-
-    pub fn power(&self, game: &Game) -> i32 {
-        let base_power = self.fighter.as_ref().map_or(0, |f| f.base_power);
-        let bonus: i32 = self
-            .get_all_equipped(game)
-            .iter()
-            .map(|e| e.power_bonus)
-            .sum();
-        base_power + bonus
-    }
-
-    pub fn defense(&self, game: &Game) -> i32 {
-        let base_defense = self.fighter.as_ref().map_or(0, |f| f.base_defense);
-        let bonus: i32 = self
-            .get_all_equipped(game)
-            .iter()
-            .map(|e| e.defense_bonus)
-            .sum();
-        base_defense + bonus
-    }
-
-    pub fn max_hp(&self, game: &Game) -> i32 {
-        let base_max_hp = self.fighter.as_ref().map_or(0, |f| f.base_max_hp) as i32;
-        let bonus: i32 = self
-            .get_all_equipped(game)
-            .iter()
-            .map(|e| e.max_hp_bonus)
-            .sum();
-        base_max_hp + bonus
-    }
-
-    // returns a list of equipped items
-    pub fn get_all_equipped(&self, game: &Game) -> Vec<Equipment> {
-        if self.name == "player" {  // TODO: Hacky. Prevents NPCs from having Inventories.
-            game.inventory
-                .iter()
-                .filter(|item| item.equipment.map_or(false, |e| e.equipped))
-                .map(|item| item.equipment.unwrap())
-                .collect()
-        } else {
-            vec![] // other objects have no equipment
-        }
-    }
 }
 
 
+// TODO: This needs a vector of 21 `Map`s!
 #[derive(Serialize, Deserialize)]
 pub struct Game {
     pub map: Map,

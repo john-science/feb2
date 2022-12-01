@@ -102,8 +102,8 @@ pub fn target_tile(
 }
 
 
-// NOTE: This expects only the player to cast lightning
-pub fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
+// NOTE: Player Only
+pub fn cast_lightning(_inv_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
     // find closest enemy (inside a maximum range and damage it)
     let npc_id = closest_npc(tcod, objects, LIGHTNING_RANGE);
     if let Some(npc_id) = npc_id {
@@ -131,9 +131,9 @@ pub fn cast_lightning(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, ob
 }
 
 
-// NOTE: This expects only the player to cast fireball
+// NOTE: Player Only
 pub fn cast_fireball(
-    _inventory_id: usize,
+    _inv_id: usize,
     tcod: &mut Tcod,
     game: &mut Game,
     objects: &mut [Object],
@@ -181,8 +181,9 @@ pub fn cast_fireball(
 }
 
 
+// NOTE: Player Only
 pub fn cast_heal(
-    _inventory_id: usize,
+    _inv_id: usize,
     _tcod: &mut Tcod,
     game: &mut Game,
     objects: &mut [Object],
@@ -203,7 +204,8 @@ pub fn cast_heal(
 }
 
 
-pub fn cast_confuse(_inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
+// NOTE: Player Only
+pub fn cast_confuse(_inv_id: usize, tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) -> UseResult {
     // ask the player for a target to confuse
     game.messages.add(
         "Left-click an enemy to confuse it, or right-click to cancel.",

@@ -42,7 +42,7 @@ use constants::SCREEN_HEIGHT;
 use constants::SCREEN_WIDTH;
 use equipment::drop_item;
 use equipment::pick_item_up;
-use equipment::use_item;
+use equipment::player_use_item;
 use map::make_map;
 use map::Map;
 use menus::inventory_menu;
@@ -215,14 +215,17 @@ Defense: {}",
 
         // show the inventory
         (Key { code: Text, .. }, "i", true) => {
-            // show the inventory: if an item is selected, use it
-            let inventory_index = inventory_menu(
-                &game.inventory,
-                "Press the key next to an item to use it, or any other to cancel.\n",
-                &mut tcod.root,
-            );
-            if let Some(inventory_index) = inventory_index {
-                use_item(inventory_index, tcod, game, objects);
+            let player = &mut objects[PLAYER];
+            if let Some(fighter) = player.fighter.as_mut() {
+                // show the inventory: if an item is selected, use it
+                let inventory_index = inventory_menu(
+                    &fighter.inventory,
+                    "Press the key next to an item to use it, or any other to cancel.\n",
+                    &mut tcod.root,
+                );
+                if let Some(inventory_index) = inventory_index {
+                    player_use_item(inventory_index, tcod, game, objects);
+                }
             }
             return DidntTakeTurn;
         }
@@ -233,7 +236,7 @@ Defense: {}",
                 .iter()
                 .position(|object| object.pos() == objects[PLAYER].pos() && object.item.is_some());
             if let Some(item_id) = item_id {
-                pick_item_up(item_id, game, objects);
+                pick_item_up(item_id, PLAYER, &mut game.messages, objects);
                 return TookTurn;
             } else {
                 return DidntTakeTurn;
@@ -242,13 +245,16 @@ Defense: {}",
 
         // show the inventory; if an item is selected, drop it
         (Key { code: Text, .. }, "d", true) => {
-            let inventory_index = inventory_menu(
-                &game.inventory,
-                "Press the key next to an item to drop it, or any other to cancel.\n'",
-                &mut tcod.root,
-            );
-            if let Some(inventory_index) = inventory_index {
-                drop_item(inventory_index, game, objects);
+            let player = &objects[PLAYER];
+            if let Some(fighter) = player.fighter.as_ref() {
+                let inventory_index = inventory_menu(
+                    &fighter.inventory,
+                    "Press the key next to an item to drop it, or any other to cancel.\n'",
+                    &mut tcod.root,
+                );
+                if let Some(inventory_index) = inventory_index {
+                    drop_item(inventory_index, PLAYER, &mut game.messages, objects);
+                }
             }
             return DidntTakeTurn;
         }
@@ -304,19 +310,6 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     player.alive = true;
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
-    // the list of objects with those two
-    let mut objects = vec![player];
-
-    // make a Map of room objects
-    let mut game = Game {
-        // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects, 1),
-        messages: Messages::new(),
-        inventory: vec![],
-        map_level: 1,
-        version: env!("CARGO_PKG_VERSION").to_string(),
-    };
-
     // initial equipment: a dagger
     let mut dagger = Object::new(0, 0, '-', "dagger", SKY, false);
     dagger.item = Some(Item::Sword);
@@ -327,7 +320,19 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         defense_bonus: 0,
         power_bonus: 2,
     });
-    game.inventory.push(dagger);
+    player.fighter.as_mut().unwrap().inventory.push(dagger);
+
+    // the list of objects with those two
+    let mut objects = vec![player];
+
+    // make a Map of room objects
+    let mut game = Game {
+        // generate map (at this point it's not drawn to the screen)
+        map: make_map(&mut objects, 1),
+        messages: Messages::new(),
+        map_level: 1,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
 
     initialise_fov(tcod, &game.map);
 

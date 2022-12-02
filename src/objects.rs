@@ -140,7 +140,6 @@ pub struct Fighter {
 
 
 impl Fighter {
-    // TODO: use this inventory
     pub fn new(hp: i32, base_defense: i32, base_power: i32, xp: i32, is_npc: bool) -> Self {
         let on_death: DeathCallback = if is_npc {
             DeathCallback::Npc
@@ -242,7 +241,7 @@ impl Object {
             item: None,
             equipment: None,
             always_visible: false,
-            level: 1,  // TODO: Just start counting at zero?
+            level: 1,
         }
     }
 
@@ -329,7 +328,6 @@ impl Object {
         (((x - self.x).pow(2) + (y - self.y).pow(2)) as f32).sqrt()
     }
 
-    // TODO: NPCs should be able to have equipment.
     // Player equips an object and gets a message
     pub fn equip(&mut self, messages: &mut Messages) {
         if self.item.is_none() {

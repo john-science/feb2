@@ -34,7 +34,7 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
         .collect::<Vec<_>>();
 
     // find duplicate items, if any
-    let mut name_map = HashMap::new();  // TODO: Add type
+    let mut name_map: HashMap<&String, i32> = HashMap::new();
     for nomen in names.iter() {
         if name_map.contains_key(nomen) {
             let count = *name_map.get(nomen).unwrap();
@@ -45,7 +45,7 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
     }
 
     // pretty-print names like: healing potion x2
-    let mut dedup = String::new();
+    let mut dedup: String = String::new();
     for (nomen, count) in name_map.iter() {
         if *count == 1 {
             dedup.push_str(nomen);
@@ -66,7 +66,7 @@ fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> 
 pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: bool) {
     if fov_recompute {
         // recompute FOV if needed (the player moved or something)
-        let player = &objects[PLAYER];
+        let player: &Object = &objects[PLAYER];
         tcod.fov
             .compute_fov(player.x, player.y, TORCH_RADIUS, true, FOV_ALGO);
     }
@@ -74,8 +74,8 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     // go through all tiles, and set their background color
     for y in 0..MAP_HEIGHT {
         for x in 0..MAP_WIDTH {
-            let visible = tcod.fov.is_in_fov(x, y);
-            let wall = game.map[x as usize][y as usize].block_sight;
+            let visible: bool = tcod.fov.is_in_fov(x, y);
+            let wall: bool = game.map[x as usize][y as usize].block_sight;
             let color = match (visible, wall) {
                 // outside of field of view:
                 (false, true) => COLOR_DARK_WALL,
@@ -118,8 +118,8 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
 
     // show the player's HP
     let player_fighter: &Fighter = objects[PLAYER].fighter.as_ref().unwrap();
-    let hp = player_fighter.hp;
-    let max_hp = player_fighter.max_hp();
+    let hp: i32 = player_fighter.hp;
+    let max_hp: i32 = player_fighter.max_hp();
     render_bar(
         &mut tcod.panel,
         1,

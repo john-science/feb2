@@ -63,7 +63,7 @@ use ui::render_all;
 
 // TODO: Game.map should be game.maps. Step 1 on the way to building down stairs.
 // TODO: The color of potions, or maybe the font, is hard to read.
-// TODO: I would like to have item/NPC/player data in data files that are ingested at compile time.
+// TODO: I would like to have item/NPC/player data in (.rs) data files that are ingested at compile time.
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {

@@ -87,8 +87,8 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
 
     // print all the options
     for (index, option_text) in options.iter().enumerate() {
-        let menu_letter = (b'a' + index as u8) as char;
-        let text = format!("({}) {}", menu_letter, option_text.as_ref());
+        let menu_letter: char = (b'a' + index as u8) as char;
+        let text: String = format!("({}) {}", menu_letter, option_text.as_ref());
         window.print_ex(
             0,
             header_height + index as i32,
@@ -99,8 +99,8 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
     }
 
     // blit the contents of "window" to the root console
-    let x = SCREEN_WIDTH / 2 - width / 2;
-    let y = SCREEN_HEIGHT / 2 - height / 2;
+    let x: i32 = SCREEN_WIDTH / 2 - width / 2;
+    let y: i32 = SCREEN_HEIGHT / 2 - height / 2;
     blit(&window, (0, 0), (width, height), root, (x, y), 1.0, 0.9);
 
     // present the root console to the player and wait for a key-press
@@ -109,7 +109,7 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
 
     // convert the ASCII code to an index; if it corresponds to an option, return it
     if key.printable.is_alphabetic() {
-        let index = key.printable.to_ascii_lowercase() as usize - 'a' as usize;
+        let index: usize = key.printable.to_ascii_lowercase() as usize - 'a' as usize;
         if index < options.len() {
             return Some(index);
         } else {

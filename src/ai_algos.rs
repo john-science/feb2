@@ -45,7 +45,7 @@ pub fn ai_basic(npc_id: usize, tcod: &Tcod, game: &mut Game, objects: &mut [Obje
         } else if objects[PLAYER].fighter.as_ref().map_or(false, |f| f.hp > 0) {
             // close enough, attack! (if the player is still alive.)
             let (npc, player) = mut_two(npc_id, PLAYER, objects);
-            npc.attack(player, game);
+            npc.melee_attack(player, game);
         }
     }
     Ai::Basic

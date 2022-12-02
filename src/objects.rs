@@ -289,8 +289,7 @@ impl Object {
 
     // TODO: We can't have the NPCs getting XP?  Maybe.
     // TODO: Should this be in the Object class?
-    // TODO: Rename melee_attack
-    pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
+    pub fn melee_attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage
         let damage = self.fighter.as_ref().unwrap().power() - target.fighter.as_ref().unwrap().defense();
         if damage > 0 {

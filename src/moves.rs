@@ -60,7 +60,7 @@ pub fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [O
     match target_id {
         Some(target_id) => {
             let (player, target) = mut_two(PLAYER, target_id, objects);
-            player.attack(target, game);
+            player.melee_attack(target, game);
             // TRYING to attack reduces karma
             player.fighter.as_mut().unwrap().karma -= 1;
         }

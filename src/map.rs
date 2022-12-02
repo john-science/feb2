@@ -16,13 +16,10 @@ use crate::constants::MAX_ROOMS;
 use crate::constants::PLAYER;
 use crate::constants::ROOM_MIN_SIZE;
 use crate::constants::ROOM_MAX_SIZE;
+use crate::loot_table::generate_floor_item;
 use crate::moves::is_blocked;
-use crate::objects::Ai;
-use crate::objects::Equipment;
-use crate::objects::Fighter;
-use crate::objects::Item;
+use crate::npc_table::generate_npc;
 use crate::objects::Object;
-use crate::objects::Slot;
 use crate::transition::from_map_level;
 use crate::transition::Transition;
 
@@ -120,8 +117,6 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 
 
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
-    use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
-
     // maximum number of npcs per room
     let max_npcs = from_map_level(
         &[
@@ -135,27 +130,6 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // choose random number of npcs
     let num_npcs = rand::thread_rng().gen_range(0, max_npcs + 1);
 
-    // npc random table
-    let troll_chance = from_map_level(
-        &[
-            Transition { level: 3, value: 15 },
-            Transition { level: 5, value: 30 },
-            Transition { level: 7, value: 60 },
-        ],
-        level,
-    );
-
-    let npc_chances = &mut [
-        Weighted {
-            weight: 80,
-            item: "orc",  // TODO: const NPC_ORC: &str = "orc";
-        },
-        Weighted {
-            weight: troll_chance,
-            item: "troll",
-        },
-    ];
-
     for _ in 0..num_npcs {
         // choose random spot for this npc
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
@@ -163,30 +137,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            let npc_choice = WeightedChoice::new(npc_chances);
-
-            let mut npc = match npc_choice.ind_sample(&mut rand::thread_rng()) {
-                "orc" => {
-                    // create an orc
-                    let mut orc = Object::new(x, y, 'O', "orc", DESATURATED_GREEN, true);
-                    orc.ai = Some(Ai::Basic);
-                    orc.fighter = Some(Fighter::new(20, 0, 4, 35, true));
-                    orc
-                }
-                "troll" => {
-                    // create a troll
-                    let mut troll = Object::new(x, y, 'T', "troll", DARKER_GREEN, true);
-                    troll.ai = Some(Ai::Basic);
-                    let mut fighter: Fighter = Fighter::new(60, 2, 8, 100, true);
-                    fighter.hp = 30;  // trolls start at half health
-                    troll.fighter = Some(fighter);
-                troll
-                }
-                _ => unreachable!(),
-            };
-
-            npc.alive = true;
-            npc.ai = Some(Ai::Basic);
+            let mut npc = generate_npc(level as i32);
+            npc.x = x;
+            npc.y = y;
             objects.push(npc);
         }
     }
@@ -200,59 +153,6 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
         level,
     );
 
-    // item random table
-    let item_chances = &mut [
-        Weighted {
-            weight: from_map_level(&[Transition { level: 4, value: 5 }], level),
-            item: Item::Sword,
-        },
-        Weighted {
-            weight: from_map_level(
-                &[Transition {
-                    level: 8,
-                    value: 15,
-                }],
-                level,
-            ),
-            item: Item::Shield,
-        },
-        Weighted {
-            weight: 35,
-            item: Item::HealPot,
-        },
-        Weighted {
-            weight: from_map_level(
-                &[Transition {
-                    level: 4,
-                    value: 25,
-                }],
-                level,
-            ),
-            item: Item::LightningScroll,
-        },
-        Weighted {
-            weight: from_map_level(
-                &[Transition {
-                    level: 6,
-                    value: 25,
-                }],
-                level,
-            ),
-            item: Item::FireballScroll,
-        },
-        Weighted {
-            weight: from_map_level(
-                &[Transition {
-                    level: 2,
-                    value: 10,
-                }],
-                level,
-            ),
-            item: Item::ConfuseScroll,
-        },
-    ];
-    let item_choice = WeightedChoice::new(item_chances);
-
     // choose random number of items
     let num_items = rand::thread_rng().gen_range(0, max_items + 1);
 
@@ -263,63 +163,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            // TODO: need a loot_table.rs that defines these items and their weight
-            let item = match item_choice.ind_sample(&mut rand::thread_rng()) {
-                Item::Shield => {
-                    // create a shield
-                    let mut object = Object::new(x, y, '[', "shield", DARKER_ORANGE, false);
-                    object.item = Some(Item::Shield);
-                    object.equipment = Some(Equipment {
-                        equipped: false,
-                        slot: Slot::OffHand,
-                        max_hp_bonus: 0,
-                        defense_bonus: 1,
-                        power_bonus: 0,
-                    });
-                    object
-                }
-                Item::Sword => {
-                    // create a sword
-                    let mut object = Object::new(x, y, '/', "sword", SKY, false);
-                    object.item = Some(Item::Sword);
-                    object.equipment = Some(Equipment {
-                        equipped: false,
-                        slot: Slot::MainHand,
-                        max_hp_bonus: 0,
-                        defense_bonus: 0,
-                        power_bonus: 3,
-                    });
-                    object
-                }
-                Item::HealPot => {
-                    // create a healing potion
-                    let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
-                    object.item = Some(Item::HealPot);
-                    object
-                }
-                Item::LightningScroll => {
-                    // create a lightning bolt scroll
-                    let mut object =
-                        Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_BLUE, false);
-                    object.item = Some(Item::LightningScroll);
-                    object
-                }
-                Item::FireballScroll => {
-                    // create a fireball scroll
-                    let mut object =
-                        Object::new(x, y, '#', "scroll of fireball", RED, false);
-                    object.item = Some(Item::FireballScroll);
-                    object
-                }
-                Item::ConfuseScroll => {
-                    // create a confuse scroll
-                    let mut object =
-                        Object::new(x, y, '#', "scroll of confusion", LIGHT_GREEN, false);
-                    object.item = Some(Item::ConfuseScroll);
-                    object
-                }
-            };
-
+            let mut item = generate_floor_item(level as i32);
+            item.x = x;
+            item.y = y;
             objects.push(item);
         }
     }

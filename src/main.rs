@@ -16,10 +16,12 @@ use tcod::map::{Map as FovMap};
 mod ai_algos;
 mod constants;
 mod equipment;
+mod loot_table;
 mod magic;
 mod map;
 mod menus;
 mod moves;
+mod npc_table;
 mod objects;
 mod player;
 mod transition;
@@ -63,7 +65,6 @@ use ui::render_all;
 
 // TODO: Game.map should be game.maps. Step 1 on the way to building down stairs.
 // TODO: The color of potions, or maybe the font, is hard to read.
-// TODO: I would like to have item/NPC/player data in (.rs) data files that are ingested at compile time.
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {

@@ -315,7 +315,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     dagger.item = Some(Item::Sword);
     dagger.equipment = Some(Equipment {
         equipped: true,
-        slot: Slot::LeftHand,
+        slot: Slot::OffHand,
         max_hp_bonus: 0,
         defense_bonus: 0,
         power_bonus: 2,

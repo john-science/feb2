@@ -263,6 +263,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
+            // TODO: need a loot_table.rs that defines these items and their weight
             let item = match item_choice.ind_sample(&mut rand::thread_rng()) {
                 Item::Shield => {
                     // create a shield
@@ -270,7 +271,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                     object.item = Some(Item::Shield);
                     object.equipment = Some(Equipment {
                         equipped: false,
-                        slot: Slot::LeftHand,
+                        slot: Slot::OffHand,
                         max_hp_bonus: 0,
                         defense_bonus: 1,
                         power_bonus: 0,
@@ -283,7 +284,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                     object.item = Some(Item::Sword);
                     object.equipment = Some(Equipment {
                         equipped: false,
-                        slot: Slot::RightHand,
+                        slot: Slot::MainHand,
                         max_hp_bonus: 0,
                         defense_bonus: 0,
                         power_bonus: 3,
@@ -299,21 +300,21 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
                 Item::LightningScroll => {
                     // create a lightning bolt scroll
                     let mut object =
-                        Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false);
+                        Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_BLUE, false);
                     object.item = Some(Item::LightningScroll);
                     object
                 }
                 Item::FireballScroll => {
                     // create a fireball scroll
                     let mut object =
-                        Object::new(x, y, '#', "scroll of fireball", LIGHT_YELLOW, false);
+                        Object::new(x, y, '#', "scroll of fireball", RED, false);
                     object.item = Some(Item::FireballScroll);
                     object
                 }
                 Item::ConfuseScroll => {
                     // create a confuse scroll
                     let mut object =
-                        Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false);
+                        Object::new(x, y, '#', "scroll of confusion", LIGHT_GREEN, false);
                     object.item = Some(Item::ConfuseScroll);
                     object
                 }

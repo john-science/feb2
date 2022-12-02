@@ -73,8 +73,10 @@ impl NPC {
 
 fn npc_table() -> Vec<NPC> {
     return vec![
+        NPC::new('I', "imp", LIGHTER_GREEN, Ai::Basic, 10, 0, 8, 10, 1, -99, 99, 1),
         NPC::new('O', "orc", DESATURATED_GREEN, Ai::Basic, 20, 0, 4, 35, 20, -99, 99, 100),
-        NPC::new('T', "troll", DARKER_GREEN, Ai::Basic, 60, 2, 8, 100, 30, 1, 99, 50),
+        NPC::new('T', "troll", DARKER_GREEN, Ai::Basic, 60, 2, 8, 100, 30, 1, 99, 25),
+        NPC::new('D', "demon", WHITE, Ai::Basic, 200, 12, 12, 100, 200, 21, 99, 250),
     ];
 }
 

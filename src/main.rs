@@ -311,6 +311,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     player.alive = true;
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
+    // TODO: move from MainHand and OffHand to... just Hand?
     // initial equipment: a dagger
     let mut dagger = Object::new(0, 0, '-', "dagger", SKY, false);
     dagger.item = Some(Item::Sword);

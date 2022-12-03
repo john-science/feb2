@@ -35,13 +35,18 @@ pub fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Op
     } else {
         inventory
             .iter()
-            .map(|item| {
+            .map(|thing| {
                 // show additional information, in case it's equipped
-                match item.equipment {
+                match thing.equipment {
                     Some(equipment) if equipment.equipped => {
-                        format!("{} (on {})", item.name, equipment.slot)
+                        format!("{} (on {})", thing.name, equipment.slot)
                     }
-                    _ => item.name.clone(),
+                    _ => match thing.item {
+                        Some(_item) if thing.charges > 1 => {
+                            format!("{} ({})", thing.name, thing.charges)
+                        }
+                        _ => thing.name.clone(),
+                    }
                 }
             })
             .collect()

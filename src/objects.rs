@@ -236,6 +236,7 @@ pub struct Object {
     pub equipment: Option<Equipment>,
     pub always_visible: bool,
     pub level: i32,
+    pub charges: i32,
 }
 
 impl Object {
@@ -254,6 +255,7 @@ impl Object {
             equipment: None,
             always_visible: false,
             level: 1,
+            charges: 1,
         }
     }
 
@@ -270,6 +272,10 @@ impl Object {
     pub fn set_pos(&mut self, x: i32, y: i32) {
         self.x = x;
         self.y = y;
+    }
+
+    pub fn is_stackable(&self) -> bool {
+        return self.item.is_some() && self.equipment.is_none();
     }
 
     // return the distance to another object

@@ -7,6 +7,7 @@ use tcod::colors::*;
 
 // Import Locally
 use crate::constants::INVENTORY_MAX;
+use crate::constants::MAX_STACK;
 use crate::constants::PLAYER;
 use crate::magic::cast_confuse;
 use crate::magic::cast_fireball;
@@ -66,8 +67,6 @@ fn toggle_equipment(inv_id: usize, _tcod: &mut Tcod, game: &mut Game, objs: &mut
 }
 
 
-
-// TODO: Some items should stack, like scrolls. Maybe health pots.
 // add to the player's inventory and remove from the map
 pub fn pick_item_up(obj_id: usize, picker_id: usize, messages: &mut Messages, objs: &mut Vec<Object>) {
     let is_player: bool = if picker_id == PLAYER { true } else { false };
@@ -80,12 +79,37 @@ pub fn pick_item_up(obj_id: usize, picker_id: usize, messages: &mut Messages, ob
             ),
             RED,
         );
-    } else {
-        let item: Object = objs.swap_remove(obj_id);
-        let item_name: String = item.name.clone();
-        objs[picker_id].fighter.as_mut().unwrap().inventory.push(item);
-        messages.add(format!("{} picked up a {}.", objs[picker_id].name, item_name), GREEN);
+        return;
     }
+
+    if objs[obj_id].is_stackable() {
+        // Check if you have others of the same Item enum type
+        let mut ids: Vec<usize> = vec![];
+        for (i, o) in fighter.inventory.iter().enumerate() {
+            if o.item == objs[obj_id].item {
+                ids.push(i);
+            }
+        }
+
+        // Find the first stack of those less than MAX_STACK == 100
+        for id in ids.iter() {
+            if fighter.inventory[*id].charges < MAX_STACK {
+                objs[picker_id].fighter.as_mut().unwrap().inventory[*id].charges += 1;
+                messages.add(format!("{} added a {} to a stack.",
+                                     objs[picker_id].name,
+                                     objs[obj_id].name.clone()),
+                             GREEN);
+                objs.remove(obj_id);
+                return;
+            }
+        }
+    }
+
+    // if it's not stackable, or no current stack was found, just add it to the inventory
+    let item: Object = objs.swap_remove(obj_id);
+    let item_name: String = item.name.clone();
+    objs[picker_id].fighter.as_mut().unwrap().inventory.push(item);
+    messages.add(format!("{} picked up a {}.", objs[picker_id].name, item_name), GREEN);
 }
 
 
@@ -118,8 +142,13 @@ pub fn player_use_item(inv_id: usize, tcod: &mut Tcod, game: &mut Game, objs: &m
         };
         match on_use(inv_id, tcod, game, objs) {
             UseResult::UsedUp => {
-                // destroy after use, unless it was cancelled for some reason
-                objs[PLAYER].fighter.as_mut().unwrap().inventory.remove(inv_id);
+                if objs[PLAYER].fighter.as_mut().unwrap().inventory[inv_id].charges > 1 {
+                    // if the object has charges, just reduce the charges
+                    objs[PLAYER].fighter.as_mut().unwrap().inventory[inv_id].charges -= 1;
+                } else {
+                    // destroy after use, unless it was cancelled for some reason
+                    objs[PLAYER].fighter.as_mut().unwrap().inventory.remove(inv_id);
+                }
             }
             UseResult::UsedAndKept => {} // do nothing
             UseResult::Cancelled => {

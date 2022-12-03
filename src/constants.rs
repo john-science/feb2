@@ -50,7 +50,7 @@ pub const INVENTORY_KEYS: &'static str = "abcdefghijklmnopqrstuvwxyz12345678";
 pub const INVENTORY_MAX: usize = 34;
 
 // TODO: Should depend on skills
-// spells and magic
+// magic items
 pub const HEAL_AMOUNT: i32 = 40;
 pub const LIGHTNING_DAMAGE: i32 = 40;
 pub const LIGHTNING_RANGE: i32 = 5;
@@ -58,6 +58,7 @@ pub const CONFUSE_RANGE: i32 = 8;
 pub const CONFUSE_NUM_TURNS: i32 = 10;
 pub const FIREBALL_RADIUS: i32 = 3;
 pub const FIREBALL_DAMAGE: i32 = 25;
+pub const MAX_STACK: i32 = 100;
 
 // parameters for map generator
 pub const ROOM_MAX_SIZE: i32 = 12;

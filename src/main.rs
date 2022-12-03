@@ -54,12 +54,9 @@ use menus::msgbox;
 use menus::Tcod;
 use moves::player_move_or_attack;
 use moves::PlayerAction;
-use objects::Equipment;
 use objects::Fighter;
 use objects::Game;
-use objects::Item;
 use objects::Object;
-use objects::Slot;
 use player::level_up;
 use player::xp_to_level_up;
 use ui::render_all;
@@ -291,18 +288,6 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
-
-    // initial equipment: a dagger
-    let mut dagger = Object::new(0, 0, '-', "dagger", SKY, false);
-    dagger.item = Some(Item::Sword);
-    dagger.equipment = Some(Equipment {
-        equipped: true,
-        slot: Slot::Hand,
-        max_hp_bonus: 0,
-        defense_bonus: 0,
-        power_bonus: 2,
-    });
-    player.fighter.as_mut().unwrap().inventory.push(dagger);
 
     // the list of objects with those two
     let mut objects = vec![player];

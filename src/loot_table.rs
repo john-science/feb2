@@ -92,14 +92,14 @@ fn loot_table() -> Vec<Loot> {
     return vec![
         // weapons
         Loot::new('/', "sword breaker", DARK_BLUE, Item::Sword, Slot::Hand, 0, 2, 4, 18, 99, 10),
-        Loot::new('/', "long sword", BLUE, Item::Sword, Slot::Hand, 0, 0, 5, 14, 99, 15),
-        Loot::new('/', "sword", SKY, Item::Sword, Slot::Hand, 0, 0, 4, 7, 99, 10),
-        Loot::new('/', "short sword", LIGHT_BLUE, Item::Sword, Slot::Hand, 0, 0, 3, 4, 99, 5),
-        Loot::new('-', "dagger", SKY, Item::Sword, Slot::Hand, 0, 0, 2, -99, 4, 5),
+        Loot::new('/', "long sword", BLUE, Item::Sword, Slot::Hand, 0, 0, 5, 14, 99, 10),
+        Loot::new('/', "sword", SKY, Item::Sword, Slot::Hand, 0, 0, 4, 7, 99, 15),
+        Loot::new('/', "short sword", LIGHT_BLUE, Item::Sword, Slot::Hand, 0, 0, 3, 4, 14, 15),
+        Loot::new('-', "dagger", SKY, Item::Sword, Slot::Hand, 0, 0, 2, -99, 4, 15),
         // shields
-        Loot::new('[', "shieldwall", DARKER_ORANGE, Item::Shield, Slot::Hand, 0, 5, 0, 15, 99, 10),                                                                                                                
-        Loot::new('[', "shield", ORANGE, Item::Shield, Slot::Hand, 0, 3, 0, 11, 99, 15),                                                                                                                           
-        Loot::new('[', "buckler", LIGHT_ORANGE, Item::Shield, Slot::Hand, 0, 2, 0, 8, 99, 25),
+        Loot::new('[', "shieldwall", DARKER_ORANGE, Item::Shield, Slot::Hand, 0, 5, 0, 15, 99, 10),
+        Loot::new('[', "shield", ORANGE, Item::Shield, Slot::Hand, 0, 3, 0, 11, 20, 15),
+        Loot::new('[', "buckler", LIGHT_ORANGE, Item::Shield, Slot::Hand, 0, 2, 0, 8, 17, 25),
         // potions
         Loot::new('!', "healing potion", VIOLET, Item::HealPot, Slot::Head, 0, 0, 0, -99, 99, 35),
         // scrolls

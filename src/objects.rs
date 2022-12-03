@@ -26,18 +26,30 @@ pub enum Item {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Slot {
-    OffHand,
-    MainHand,
+    Chest,
     Head,
+    Hand,
+    Ring,
+}
+
+
+pub fn num_in_slot(slot: Slot) -> Option<usize> {
+    match slot {
+        Slot::Chest => Some(1),
+        Slot::Head => Some(1),
+        Slot::Hand => Some(2),
+        Slot::Ring => Some(8),
+    }
 }
 
 
 impl std::fmt::Display for Slot {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Slot::OffHand => write!(f, "off-hand"),
-            Slot::MainHand => write!(f, "main hand"),
+            Slot::Chest => write!(f, "chest"),
             Slot::Head => write!(f, "head"),
+            Slot::Hand => write!(f, "hand"),
+            Slot::Ring => write!(f, "ring"),
         }
     }
 }

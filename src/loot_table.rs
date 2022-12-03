@@ -75,11 +75,13 @@ impl Loot {
 
 fn loot_table() -> Vec<Loot> {
     return vec![
-        Loot::new('[', "shield", DARKER_ORANGE, Item::Shield, Slot::OffHand, 0, 3, 0, 7, 99, 15),
-        Loot::new('/', "sword breaker", BLUE, Item::Sword, Slot::OffHand, 0, 2, 4, 18, 99, 10),
-        Loot::new('/', "long sword", BLUE, Item::Sword, Slot::MainHand, 0, 0, 4, 14, 99, 15),
-        Loot::new('/', "sword", SKY, Item::Sword, Slot::MainHand, 0, 0, 3, 4, 99, 5),
-        Loot::new('-', "dagger", SKY, Item::Sword, Slot::OffHand, 0, 0, 2, -99, -1, 5), // NOTE: start game
+        Loot::new('[', "shieldwall", DARKER_ORANGE, Item::Shield, Slot::Hand, 0, 5, 0, 15, 99, 10),
+        Loot::new('[', "shield", ORANGE, Item::Shield, Slot::Hand, 0, 3, 0, 11, 99, 15),
+        Loot::new('[', "buckler", LIGHT_ORANGE, Item::Shield, Slot::Hand, 0, 2, 0, 8, 99, 25),
+        Loot::new('/', "sword breaker", DARK_BLUE, Item::Sword, Slot::Hand, 0, 2, 4, 18, 99, 10),
+        Loot::new('/', "long sword", BLUE, Item::Sword, Slot::Hand, 0, 0, 4, 14, 99, 15),
+        Loot::new('/', "sword", SKY, Item::Sword, Slot::Hand, 0, 0, 3, 4, 99, 5),
+        Loot::new('-', "dagger", SKY, Item::Sword, Slot::Hand, 0, 0, 2, -99, 4, 5),
         Loot::new('!', "healing potion", VIOLET, Item::HealPot, Slot::Head, 0, 0, 0, -99, 99, 35),
         Loot::new('#', "scroll of lightning bolt", LIGHT_BLUE, Item::LightningScroll, Slot::Head, 0, 0, 0, 4, 99, 25),
         Loot::new('#', "scroll of fireball", RED, Item::FireballScroll, Slot::Head, 0, 0, 0, 2, 99, 25),

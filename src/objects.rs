@@ -299,7 +299,6 @@ impl Object {
         return xp;
     }
 
-    // TODO: We can't have the NPCs getting XP?  Maybe.
     // TODO: Should this be in the Object class?
     pub fn melee_attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage

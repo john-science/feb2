@@ -46,6 +46,8 @@ pub const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
 pub const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
 pub const CHARACTER_SCREEN_WIDTH: i32 = 30;
 pub const INVENTORY_WIDTH: i32 = 50;
+pub const INVENTORY_KEYS: &'static str = "abcdefghijklmnopqrstuvwxyz12345678";
+pub const INVENTORY_MAX: usize = 34;
 
 // TODO: Should depend on skills
 // spells and magic

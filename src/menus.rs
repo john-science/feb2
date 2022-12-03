@@ -9,6 +9,8 @@ use tcod::input::{Key, Mouse};
 use tcod::map::{Map as FovMap};
 
 // Import Locally
+use crate::constants::INVENTORY_KEYS;
+use crate::constants::INVENTORY_MAX;
 use crate::constants::INVENTORY_WIDTH;
 use crate::constants::SCREEN_HEIGHT;
 use crate::constants::SCREEN_WIDTH;
@@ -58,8 +60,8 @@ pub fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Op
 
 pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
     assert!(
-        options.len() <= 26,
-        "Cannot have a menu with more than 26 options."
+        options.len() <= INVENTORY_MAX,
+        "Cannot have a menu with more than {} options.", INVENTORY_MAX
     );
 
     // calculate total height for the header (after auto-wrap) and one line per option
@@ -87,7 +89,8 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
 
     // print all the options
     for (index, option_text) in options.iter().enumerate() {
-        let menu_letter: char = (b'a' + index as u8) as char;
+        //let menu_letter: char = (b'a' + index as u8) as char;
+        let menu_letter: char = INVENTORY_KEYS.chars().nth(index).unwrap();
         let text: String = format!("({}) {}", menu_letter, option_text.as_ref());
         window.print_ex(
             0,
@@ -108,16 +111,7 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
     let key = root.wait_for_keypress(true);
 
     // convert the ASCII code to an index; if it corresponds to an option, return it
-    if key.printable.is_alphabetic() {
-        let index: usize = key.printable.to_ascii_lowercase() as usize - 'a' as usize;
-        if index < options.len() {
-            return Some(index);
-        } else {
-            return None;
-        }
-    } else {
-        return None;
-    }
+    return INVENTORY_KEYS.find(key.printable);
 }
 
 

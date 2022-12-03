@@ -6,6 +6,7 @@
 use tcod::colors::*;
 
 // Import Locally
+use crate::constants::INVENTORY_MAX;
 use crate::constants::PLAYER;
 use crate::magic::cast_confuse;
 use crate::magic::cast_fireball;
@@ -66,13 +67,12 @@ fn toggle_equipment(inv_id: usize, _tcod: &mut Tcod, game: &mut Game, objs: &mut
 
 
 
-// TODO: Should be able to hold 52 things: a-z and A-Z (maybe 62 with 0-9 for gear?)
 // TODO: Some items should stack, like scrolls. Maybe health pots.
 // add to the player's inventory and remove from the map
 pub fn pick_item_up(obj_id: usize, picker_id: usize, messages: &mut Messages, objs: &mut Vec<Object>) {
     let is_player: bool = if picker_id == PLAYER { true } else { false };
     let fighter: &Fighter = objs[picker_id].fighter.as_ref().unwrap();
-    if is_player && fighter.inventory.len() >= 26{
+    if is_player && fighter.inventory.len() >= INVENTORY_MAX {
         messages.add(
             format!(
                 "Your inventory is full, you cannot pick up {}.",

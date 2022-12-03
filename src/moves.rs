@@ -9,6 +9,14 @@ use crate::objects::Object;
 use crate::utils::mut_two;
 
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum PlayerAction {
+    TookTurn,
+    DidntTakeTurn,
+    Exit,
+}
+
+
 pub fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
     // first test the map tile
     if map[x as usize][y as usize].blocked {
@@ -22,13 +30,14 @@ pub fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 
-// TODO: This needs to return true/false for if a move actually happened.
 // move by the given amount, if the destination is not blocked
-pub fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) {
+pub fn move_by(id: usize, dx: i32, dy: i32, map: &Map, objects: &mut [Object]) -> bool{
     let (x, y) = objects[id].pos();
     if !is_blocked(x + dx, y + dy, map, objects) {
         objects[id].set_pos(x + dx, y + dy);
+        return true;
     }
+    return false;
 }
 
 
@@ -46,7 +55,9 @@ pub fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects:
 }
 
 
-pub fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [Object]) {
+pub fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [Object]) -> PlayerAction{
+    use PlayerAction::*;
+
     // the coordinates the player is moving to/attacking
     let x = objects[PLAYER].x + dx;
     let y = objects[PLAYER].y + dy;
@@ -63,9 +74,14 @@ pub fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [O
             player.melee_attack(target, game);
             // TRYING to attack reduces karma
             player.fighter.as_mut().unwrap().karma -= 1;
+            return TookTurn;
         }
         None => {
-            move_by(PLAYER, dx, dy, &game.map, objects);
+            if move_by(PLAYER, dx, dy, &game.map, objects) {
+                return TookTurn;
+            } else {
+                return DidntTakeTurn;
+            }
         }
     };
 }

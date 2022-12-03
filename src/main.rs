@@ -53,6 +53,7 @@ use menus::Messages;
 use menus::msgbox;
 use menus::Tcod;
 use moves::player_move_or_attack;
+use moves::PlayerAction;
 use objects::Equipment;
 use objects::Fighter;
 use objects::Game;
@@ -95,14 +96,6 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bo
 }
 
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum PlayerAction {
-    TookTurn,
-    DidntTakeTurn,
-    Exit,
-}
-
-
 // TODO: Key "m" should open a scrollable messages window.
 // TODO: Hitting "?" should pop up a command menu. (Could we make this more configurable/automatic?)
 // TODO: Fullscreen isn't working.
@@ -114,56 +107,44 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
     match (tcod.key, tcod.key.text(), player_alive) {
         // movement keys
         (Key { code: Up, .. }, _, true) => {
-            player_move_or_attack(0, -1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(0, -1, game, objects);
         }
         (Key { code: Down, .. }, _, true) => {
-            player_move_or_attack(0, 1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(0, 1, game, objects);
         }
         (Key { code: Left, .. }, _, true) => {
-            player_move_or_attack(-1, 0, game, objects);
-            return TookTurn;
+            return player_move_or_attack(-1, 0, game, objects);
         }
         (Key { code: Right, .. }, _, true) => {
-            player_move_or_attack(1, 0, game, objects);
-            return TookTurn;
+            return player_move_or_attack(1, 0, game, objects);
         }
         // numpad keys
         (Key { code: NumPad1, .. }, _, true) | (Key { code: End, .. }, _, true) => {
-            player_move_or_attack(-1, 1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(-1, 1, game, objects);
         }
         (Key { code: NumPad2, .. }, _, true) => {
-            player_move_or_attack(0, 1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(0, 1, game, objects);
         }
         (Key { code: NumPad3, .. }, _, true) | (Key { code: PageDown, .. }, _, true) => {
-            player_move_or_attack(1, 1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(1, 1, game, objects);
         }
         (Key { code: NumPad4, .. }, _, true) => {
-            player_move_or_attack(-1, 0, game, objects);
-            return TookTurn;
+            return player_move_or_attack(-1, 0, game, objects);
         }
         (Key { code: NumPad5, .. }, _, true) => {
             return TookTurn;
         }
         (Key { code: NumPad6, .. }, _, true) => {
-            player_move_or_attack(1, 0, game, objects);
-            return TookTurn;
+            return player_move_or_attack(1, 0, game, objects);
         }
         (Key { code: NumPad7, .. }, _, true) | (Key { code: Home, .. }, _, true) => {
-            player_move_or_attack(-1, -1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(-1, -1, game, objects);
         }
         (Key { code: NumPad8, .. }, _, true) => {
-            player_move_or_attack(0, -1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(0, -1, game, objects);
         }
         (Key { code: NumPad9, .. }, _, true) | (Key { code: PageUp, .. }, _, true) => {
-            player_move_or_attack(1, -1, game, objects);
-            return TookTurn;
+            return player_move_or_attack(1, -1, game, objects);
         }
 
         // go up stairs, if the player is on them

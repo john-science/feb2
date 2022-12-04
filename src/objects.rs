@@ -102,6 +102,8 @@ impl DeathCallback {
 }
 
 
+// TODO: Pop up the character screen on player death.
+// TODO: Game should restart after the "you died" screen.
 fn player_death(player: &mut Object, game: &mut Game) {
     // the game ended!
     game.messages.add("You died!", RED);
@@ -407,4 +409,5 @@ pub struct Game {
     pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
     pub map_level: u32,
     pub version: String,
+    pub turn: u32,
 }

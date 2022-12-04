@@ -177,7 +177,11 @@ Experience: {} of {}
 
 Maximum HP: {}
 Attack: {}
-Defense: {}",
+Defense: {}
+
+Day: 0
+Turn: {}
+",
                     fighter.karma,
                     level,
                     fighter.xp,
@@ -185,6 +189,7 @@ Defense: {}",
                     fighter.max_hp(),
                     fighter.power(),
                     fighter.defense(),
+                    game.turn,
                 );
                 msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
             }
@@ -299,6 +304,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         messages: Messages::new(),
         map_level: 1,
         version: env!("CARGO_PKG_VERSION").to_string(),
+        turn: 0,
     };
 
     initialise_fov(tcod, &game.map);
@@ -343,6 +349,8 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         if player_action == PlayerAction::Exit {
             save_game(game, objects).unwrap();
             break;
+        } else if player_action == PlayerAction::TookTurn {
+            game.turn += 1;
         }
 
         // let npcs take their turn

@@ -172,7 +172,7 @@ pub fn cast_fireball(
             }
         }
     }
-    objects[PLAYER].fighter.as_mut().unwrap().kill_rewards(xp, game.map_level as i32);
+    objects[PLAYER].fighter.as_mut().unwrap().kill_rewards(xp_to_gain, game.map_level as i32);
 
     UseResult::UsedUp
 }

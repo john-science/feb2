@@ -216,6 +216,11 @@ impl Fighter {
             .map(|item| item.equipment.unwrap())
             .collect()
     }
+
+    pub fn kill_rewards(&mut self, xp: i32, game_level: i32) {
+        self.xp += xp;
+        self.karma -= xp * game_level;
+    }
 }
 
 
@@ -325,8 +330,7 @@ impl Object {
             let xp = target.take_damage(damage, game);
             if xp > 0 {
                 // yield experience to the player
-                self.fighter.as_mut().unwrap().xp += xp;
-                self.fighter.as_mut().unwrap().karma -= xp * (game.map_level as i32);
+                self.fighter.as_mut().unwrap().kill_rewards(xp, game.map_level as i32);
             }
         } else {
             game.messages.add(

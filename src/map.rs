@@ -172,7 +172,6 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 }
 
 
-// TODO: Bug. I entered a game and there were 3 npcs in the start room. (No npcs should spawn in FOV of the player at the Start.)
 pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
@@ -201,9 +200,8 @@ pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
             .iter()
             .any(|other_room| new_room.intersects_with(other_room));
 
+        // this means there are no intersections, so this room is valid
         if !failed {
-            // this means there are no intersections, so this room is valid
-
             // "paint" it to the map's tiles
             create_room(new_room, &mut map);
 

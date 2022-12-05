@@ -271,7 +271,7 @@ fn initialise_fov(tcod: &mut Tcod, map: &Map) {
 
 // NOTE: There can currently be only one save game at a time.
 //       But the save games are human-readable, storable, and editable.
-fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
+fn save_game(game: &Game, objects: &Vec<Vec<Object>>) -> Result<(), Box<dyn Error>> {
     let save_data = serde_json::to_string(&(game, objects))?;
     let mut file = File::create(SAVE_FILE)?;
     file.write_all(save_data.as_bytes())?;
@@ -279,28 +279,30 @@ fn save_game(game: &Game, objects: &[Object]) -> Result<(), Box<dyn Error>> {
 }
 
 
-fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
+
+fn load_game() -> Result<(Game, Vec<Vec<Object>>), Box<dyn Error>> {
     let mut json_save_state = String::new();
     let mut file = File::open(SAVE_FILE)?;
     file.read_to_string(&mut json_save_state)?;
-    let result = serde_json::from_str::<(Game, Vec<Object>)>(&json_save_state)?;
+    let result = serde_json::from_str::<(Game, Vec<Vec<Object>>)>(&json_save_state)?;
     Ok(result)
 }
 
 
-fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
+fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "you", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
-    // the list of objects with those two
-    let mut objects = vec![player];
+    // the list of objects in the game, by floor
+    let mut objects: Vec<Vec<Object>> = vec![vec![]; MAX_LVL as usize];
+    objects[0].push(player);
 
     // make a Map of room objects
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects, 1),
+        map: make_map(&mut objects[0], 1),
         messages: Messages::new(),
         map_level: 1,
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -319,7 +321,8 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
 }
 
 
-fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
+fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
+    let objects = &mut all_objects[game.map_level as usize - 1];
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
 
@@ -347,7 +350,7 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         previous_player_position = objects[PLAYER].pos();
         let player_action = handle_keys(tcod, game, objects);
         if player_action == PlayerAction::Exit {
-            save_game(game, objects).unwrap();
+            save_game(game, all_objects).unwrap();
             break;
         } else if player_action == PlayerAction::TookTurn {
             game.turn += 1;

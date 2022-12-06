@@ -402,12 +402,20 @@ impl Object {
 }
 
 
-// TODO: This needs a vector of 21 `Map`s!
 #[derive(Serialize, Deserialize)]
 pub struct Game {
-    pub map: Map,
+    pub maps: Vec<Map>,
     pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
     pub map_level: u32,
     pub version: String,
     pub turn: u32,
+}
+
+impl Game {
+    // TODO: JOHN. Does Game need a new?
+    //pub fn new(objects: &mut Vec<Objects>) -> Self {
+    //}
+    pub fn map(&mut self) -> &mut Map {
+        return &mut self.maps[self.map_level as usize - 1];
+    }
 }

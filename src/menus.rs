@@ -116,7 +116,12 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
     let key = root.wait_for_keypress(true);
 
     // convert the ASCII code to an index; if it corresponds to an option, return it
-    return INVENTORY_KEYS.find(key.printable);
+    let index = INVENTORY_KEYS.find(key.printable);
+    if index.is_some() && index.unwrap() < options.len() as usize {
+        return index;
+    } else {
+        return None;
+    }
 }
 
 

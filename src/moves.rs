@@ -77,7 +77,7 @@ pub fn player_move_or_attack(dx: i32, dy: i32, game: &mut Game, objects: &mut [O
             return TookTurn;
         }
         None => {
-            if move_by(PLAYER, dx, dy, &game.map, objects) {
+            if move_by(PLAYER, dx, dy, &game.map(), objects) {
                 return TookTurn;
             } else {
                 return DidntTakeTurn;

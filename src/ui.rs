@@ -11,7 +11,8 @@ use tcod::input::{Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 
 // Import Locally
-use crate::constants::*;  // TODO: Will the complier make this more efficient for me?
+use crate::constants::*;
+use crate::map::Map;
 use crate::menus::render_bar;
 use crate::menus::Tcod;
 use crate::objects::Fighter;
@@ -72,10 +73,11 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     }
 
     // go through all tiles, and set their background color
+    let map: &mut Map = game.map();
     for y in 0..MAP_HEIGHT {
         for x in 0..MAP_WIDTH {
             let visible: bool = tcod.fov.is_in_fov(x, y);
-            let wall: bool = game.map[x as usize][y as usize].block_sight;
+            let wall: bool = map[x as usize][y as usize].block_sight;
             let color = match (visible, wall) {
                 // outside of field of view:
                 (false, true) => COLOR_DARK_WALL,
@@ -84,7 +86,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
                 (true, true) => COLOR_LIGHT_WALL,
                 (true, false) => COLOR_LIGHT_GROUND,
             };
-            let explored = &mut game.map[x as usize][y as usize].explored;
+            let explored = &mut map[x as usize][y as usize].explored;
             if visible {
                 // since it's visible, explore it
                 *explored = true;
@@ -102,7 +104,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         .iter()
         .filter(|o| {
             tcod.fov.is_in_fov(o.x, o.y)
-                || (o.always_visible && game.map[o.x as usize][o.y as usize].explored)
+                || (o.always_visible && map[o.x as usize][o.y as usize].explored)
         })
         .collect();
     // sort so that non-blocking objects come first

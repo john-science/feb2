@@ -61,7 +61,6 @@ use player::level_up;
 use player::xp_to_level_up;
 use ui::render_all;
 
-// TODO: Game.map should be game.maps. Step 1 on the way to building down stairs.
 // TODO: The color of potions, or maybe the font, is hard to read.
 
 // Advance to the next level
@@ -86,8 +85,8 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bo
             RED,
         );
         game.map_level += 1;
-        game.map = make_map(objects, game.map_level);
-        initialise_fov(tcod, &game.map);
+        game.maps.push(make_map(objects, game.map_level));
+        initialise_fov(tcod, &game.map());
     }
     return true;
 }
@@ -302,14 +301,14 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
     // make a Map of room objects
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects[0], 1),
+        maps: vec![make_map(&mut objects[0], 1)],
         messages: Messages::new(),
         map_level: 1,
         version: env!("CARGO_PKG_VERSION").to_string(),
         turn: 0,
     };
 
-    initialise_fov(tcod, &game.map);
+    initialise_fov(tcod, &game.map());
 
     // a welcome message
     game.messages.add(
@@ -323,6 +322,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
 
 fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
     let objects = &mut all_objects[game.map_level as usize - 1];
+
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
 
@@ -338,6 +338,7 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // render the screen
+        // TODO: JOHN! BUG! When re-loading from save! Only if you save above the first floor.
         let fov_recompute = previous_player_position != (objects[PLAYER].pos());
         render_all(tcod, game, objects, fov_recompute);
 
@@ -429,7 +430,11 @@ fn main_menu(tcod: &mut Tcod) {
                         if !load_version_equals(tcod, &game) {
                             continue;
                         } else {
-                            initialise_fov(tcod, &game.map);
+                            println!("game level: {}", game.map_level);
+                            println!("num objs 0: {}", objects[0].len());
+                            println!("num objs 1: {}", objects[1].len());
+                            println!("num objs 2: {}", objects[2].len());
+                            initialise_fov(tcod, &game.map());
                             play_game(tcod, &mut game, &mut objects);
                         }
                     }

@@ -412,7 +412,7 @@ pub struct Game {
 }
 
 impl Game {
-    // TODO: JOHN. Does Game need a new?
+    // TODO: Does Game need a new?
     //pub fn new(objects: &mut Vec<Objects>) -> Self {
     //}
     pub fn map(&mut self) -> &mut Map {

@@ -172,15 +172,11 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 }
 
 
-pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
+// TODO: Player cannot visit old levels!
+pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: u32) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
-
-    // TODO: Player cannot visit old levels! OMG, this deletes everything!!!!!!
-    // Player is the first element, remove everything else.
-    // NOTE: works only when the player is the first object!
-    assert_eq!(&objects[PLAYER] as *const Object, &objects[0] as *const Object);
-    objects.truncate(1);
+    let objects = &mut all_objects[level as usize - 1];
 
     // generate a random set of roooms
     let mut rooms = vec![];

@@ -63,10 +63,21 @@ use ui::render_all;
 
 // TODO: The color of potions, or maybe the font, is hard to read.
 
+// TODO: This only allows the player to go UP.
+fn change_player_level(objects: &mut Vec<Vec<Object>>, lvl: usize) {
+    assert!(objects[lvl].len() == 0);  // TODO: No going down. Yet.
+    // move the player up one level
+    let player = objects[lvl - 2][PLAYER].clone();
+    objects[lvl - 1].push(player);
+
+    // remove the player from the lower level
+    objects[lvl - 2] = objects[lvl - 2].split_off(1);
+}
+
 // Advance to the next level
-fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bool {
+fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
     if game.map_level == MAX_LVL {
-        if objects[PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
+        if all_objects[game.map_level as usize - 1][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
             game.messages.add(
                 "You ascend from Purgatory.",
                 RED,
@@ -85,7 +96,8 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bo
             RED,
         );
         game.map_level += 1;
-        game.maps.push(make_map(objects, game.map_level));
+        change_player_level(all_objects, game.map_level as usize);
+        game.maps.push(make_map(all_objects, game.map_level));
         initialise_fov(tcod, &game.map());
     }
     return true;
@@ -95,10 +107,11 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> bo
 // TODO: Key "m" should open a scrollable messages window.
 // TODO: Hitting "?" should pop up a command menu. (Could we make this more configurable/automatic?)
 // TODO: Fullscreen isn't working.
-fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
+fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> PlayerAction {
     use tcod::input::KeyCode::*;
     use PlayerAction::*;
 
+    let objects = &mut all_objects[game.map_level as usize - 1];
     let player_alive = objects[PLAYER].alive;
     match (tcod.key, tcod.key.text(), player_alive) {
         // movement keys
@@ -149,7 +162,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> P
                 .iter()
                 .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
             if player_on_stairs {
-                let success: bool = next_level(tcod, game, objects);
+                let success: bool = next_level(tcod, game, all_objects);
                 if success {
                     // TODO: If game.level > MAX_LVL: return WinExit
                     return TookTurn;
@@ -301,7 +314,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
     // make a Map of room objects
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        maps: vec![make_map(&mut objects[0], 1)],
+        maps: vec![make_map(&mut objects, 1)],
         messages: Messages::new(),
         map_level: 1,
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -321,7 +334,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
 
 
 fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
-    let objects = &mut all_objects[game.map_level as usize - 1];
+    //let objects = &mut all_objects[game.map_level as usize - 1];
 
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
@@ -338,18 +351,18 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // render the screen
-        // TODO: JOHN! BUG! When re-loading from save! Only if you save above the first floor.
-        let fov_recompute = previous_player_position != (objects[PLAYER].pos());
-        render_all(tcod, game, objects, fov_recompute);
+        let lvl: usize = game.map_level as usize - 1;
+        let fov_recompute = previous_player_position != (all_objects[lvl][PLAYER].pos());
+        render_all(tcod, game, &mut all_objects[lvl], fov_recompute);
 
         tcod.root.flush();
 
         // level up if needed
-        level_up(tcod, game, objects);
+        level_up(tcod, game, &mut all_objects[lvl]);
 
         // handle keys and exit game if needed
-        previous_player_position = objects[PLAYER].pos();
-        let player_action = handle_keys(tcod, game, objects);
+        previous_player_position = all_objects[lvl][PLAYER].pos();
+        let player_action = handle_keys(tcod, game, all_objects);
         if player_action == PlayerAction::Exit {
             save_game(game, all_objects).unwrap();
             break;
@@ -358,10 +371,10 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // let npcs take their turn
-        if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
-            for id in 0..objects.len() {
-                if id != PLAYER && objects[id].ai.is_some() {
-                    ai_take_turn(id, tcod, game, objects);
+        if all_objects[lvl][PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
+            for id in 0..all_objects[lvl].len() {
+                if id != PLAYER && all_objects[lvl][id].ai.is_some() {
+                    ai_take_turn(id, tcod, game, &mut all_objects[lvl]);
                 }
             }
         }
@@ -430,10 +443,6 @@ fn main_menu(tcod: &mut Tcod) {
                         if !load_version_equals(tcod, &game) {
                             continue;
                         } else {
-                            println!("game level: {}", game.map_level);
-                            println!("num objs 0: {}", objects[0].len());
-                            println!("num objs 1: {}", objects[1].len());
-                            println!("num objs 2: {}", objects[2].len());
                             initialise_fov(tcod, &game.map());
                             play_game(tcod, &mut game, &mut objects);
                         }

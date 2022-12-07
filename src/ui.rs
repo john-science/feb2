@@ -164,7 +164,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         5,
         BackgroundFlag::None,
         TextAlignment::Left,
-        format!("Lvl {}: {}", game.map_level, LVL_NAMES[(game.map_level - 1) as usize]),
+        format!("Lvl {}: {}", game.lvl, LVL_NAMES[(game.lvl - 1) as usize]),
     );
 
     // TODO: panic scrolls if string is too long.

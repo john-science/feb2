@@ -63,7 +63,7 @@ use ui::render_all;
 
 // TODO: The color of potions, or maybe the font, is hard to read.
 
-// TODO: This only allows the player to go UP.
+// TODO: This only allows the player to go UP.  (Should have a from_lvl and a to_lvl.)
 fn change_player_level(objects: &mut Vec<Vec<Object>>, lvl: usize) {
     assert!(objects[lvl].len() == 0);  // TODO: No going down. Yet.
     // move the player up one level
@@ -76,8 +76,8 @@ fn change_player_level(objects: &mut Vec<Vec<Object>>, lvl: usize) {
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
-    if game.map_level == MAX_LVL {
-        if all_objects[game.map_level as usize - 1][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
+    if game.lvl == MAX_LVL {
+        if all_objects[game.lvl as usize - 1][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
             game.messages.add(
                 "You ascend from Purgatory.",
                 RED,
@@ -95,9 +95,9 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object
             "You ascend higher into Purgatory...",
             RED,
         );
-        game.map_level += 1;
-        change_player_level(all_objects, game.map_level as usize);
-        game.maps.push(make_map(all_objects, game.map_level));
+        game.lvl += 1;
+        change_player_level(all_objects, game.lvl as usize);
+        game.maps.push(make_map(all_objects, game.lvl));
         initialise_fov(tcod, &game.map());
     }
     return true;
@@ -111,7 +111,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
     use tcod::input::KeyCode::*;
     use PlayerAction::*;
 
-    let objects = &mut all_objects[game.map_level as usize - 1];
+    let objects = &mut all_objects[game.lvl as usize - 1];
     let player_alive = objects[PLAYER].alive;
     match (tcod.key, tcod.key.text(), player_alive) {
         // movement keys
@@ -316,7 +316,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
         // generate map (at this point it's not drawn to the screen)
         maps: vec![make_map(&mut objects, 1)],
         messages: Messages::new(),
-        map_level: 1,
+        lvl: 1,
         version: env!("CARGO_PKG_VERSION").to_string(),
         turn: 0,
     };
@@ -334,7 +334,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
 
 
 fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
-    //let objects = &mut all_objects[game.map_level as usize - 1];
+    //let objects = &mut all_objects[game.lvl as usize - 1];
 
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
@@ -351,7 +351,7 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // render the screen
-        let lvl: usize = game.map_level as usize - 1;
+        let lvl: usize = game.lvl as usize - 1;
         let fov_recompute = previous_player_position != (all_objects[lvl][PLAYER].pos());
         render_all(tcod, game, &mut all_objects[lvl], fov_recompute);
 

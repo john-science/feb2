@@ -63,16 +63,26 @@ use ui::render_all;
 
 // TODO: The color of potions, or maybe the font, is hard to read.
 
-// TODO: This only allows the player to go UP.  (Should have a from_lvl and a to_lvl.)
-fn change_player_level(objects: &mut Vec<Vec<Object>>, lvl: usize) {
-    assert!(objects[lvl].len() == 0);  // TODO: No going down. Yet.
-    // move the player up one level
-    let player = objects[lvl - 2][PLAYER].clone();
-    objects[lvl - 1].push(player);
 
-    // remove the player from the lower level
-    objects[lvl - 2] = objects[lvl - 2].split_off(1);
+fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: usize) {
+    let up: bool = if from_lvl < to_lvl { true } else { false };
+    if up {
+        // exists because we don't make all the maps at the start of the game. TODO: Maybe we should
+        assert!(objects[to_lvl].len() == 0);  // TODO: No going down. Yet.
+
+        // move the player up one level
+        let player = objects[from_lvl][PLAYER].clone();
+        objects[to_lvl].push(player);
+
+        // remove the player from the lower level
+        objects[from_lvl] = objects[from_lvl].split_off(1);
+    }/* else {
+        // move the player down one level
+        let player = objects[lvl][PLAYER].clone();
+        // TODO: Support going down
+    } */
 }
+
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
@@ -96,7 +106,7 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object
             RED,
         );
         game.lvl += 1;
-        change_player_level(all_objects, game.lvl as usize);
+        change_player_level(all_objects, game.lvl as usize - 2, game.lvl as usize - 1);
         game.maps.push(make_map(all_objects, game.lvl));
         initialise_fov(tcod, &game.map());
     }

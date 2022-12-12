@@ -120,9 +120,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // maximum number of npcs per room
     let max_npcs = from_map_level(
         &[
-            Transition { level: 1, value: 2 },
-            Transition { level: 4, value: 3 },
-            Transition { level: 6, value: 5 },
+            Transition { level: 0, value: 2 },
+            Transition { level: 3, value: 3 },
+            Transition { level: 5, value: 5 },
         ],
         level,
     );
@@ -147,8 +147,8 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // maximum number of items per room
     let max_items = from_map_level(
         &[
-            Transition { level: 1, value: 1 },
-            Transition { level: 4, value: 2 },
+            Transition { level: 0, value: 1 },
+            Transition { level: 3, value: 2 },
         ],
         level,
     );
@@ -173,10 +173,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
 
 // TODO: Player cannot visit old levels!
-pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: u32) -> Map {
+pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
-    let objects = &mut all_objects[level as usize - 1];
+    let objects = &mut all_objects[level];
 
     // generate a random set of roooms
     let mut rooms = vec![];
@@ -226,7 +226,7 @@ pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: u32) -> Map {
                 }
 
                 // add some content to this room, such as npcs
-                place_objects(new_room, &map, objects, level);
+                place_objects(new_room, &map, objects, level as u32);
             }
 
             // finally, append the new room to the list

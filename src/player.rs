@@ -14,7 +14,7 @@ use crate::objects::Object;
 
 
 pub fn xp_to_level_up(lvl: i32) -> i32 {
-    return LEVEL_UP_BASE + lvl * LEVEL_UP_FACTOR;
+    return LEVEL_UP_BASE + (lvl as i32 + 1) * LEVEL_UP_FACTOR;
 }
 
 

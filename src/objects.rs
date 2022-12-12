@@ -124,7 +124,7 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
             "{} is dead! (+{}XP / -{}K)",  // TODO: It's not death.
             npc.name,
             npc.fighter.as_ref().unwrap().xp,
-            npc.fighter.as_ref().unwrap().xp * (game.lvl as i32)
+            npc.fighter.as_ref().unwrap().xp * (game.lvl as i32 + 1) // TODO: This should come from the actual rewards
         ),
         ORANGE,
     );
@@ -220,8 +220,9 @@ impl Fighter {
     }
 
     pub fn kill_rewards(&mut self, xp: i32, game_level: i32) {
+        println!("{}", game_level as i64);
         self.xp += xp;
-        self.karma -= xp * game_level;
+        self.karma -= xp * (game_level + 1);
     }
 }
 
@@ -406,7 +407,7 @@ impl Object {
 pub struct Game {
     pub maps: Vec<Map>,
     pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
-    pub lvl: u32,
+    pub lvl: usize,
     pub version: String,
     pub turn: u32,
 }
@@ -416,6 +417,6 @@ impl Game {
     //pub fn new(objects: &mut Vec<Objects>) -> Self {
     //}
     pub fn map(&mut self) -> &mut Map {
-        return &mut self.maps[self.lvl as usize - 1];
+        return &mut self.maps[self.lvl];
     }
 }

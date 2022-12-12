@@ -36,7 +36,7 @@ use constants::KARMA_TO_ASCEND;
 use constants::LIMIT_FPS;
 use constants::MAP_HEIGHT;
 use constants::MAP_WIDTH;
-use constants::MAX_LVL;
+use constants::NUM_LVLS;
 use constants::PANEL_HEIGHT;
 use constants::PLAYER;
 use constants::SAVE_FILE;
@@ -86,8 +86,8 @@ fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: 
 
 // Advance to the next level
 fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
-    if game.lvl == MAX_LVL {
-        if all_objects[game.lvl as usize - 1][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
+    if game.lvl == (NUM_LVLS as usize - 1) {
+        if all_objects[game.lvl][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
             game.messages.add(
                 "You ascend from Purgatory.",
                 RED,
@@ -106,7 +106,7 @@ fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object
             RED,
         );
         game.lvl += 1;
-        change_player_level(all_objects, game.lvl as usize - 2, game.lvl as usize - 1);
+        change_player_level(all_objects, game.lvl - 1, game.lvl);
         game.maps.push(make_map(all_objects, game.lvl));
         initialise_fov(tcod, &game.map());
     }
@@ -121,7 +121,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
     use tcod::input::KeyCode::*;
     use PlayerAction::*;
 
-    let objects = &mut all_objects[game.lvl as usize - 1];
+    let objects = &mut all_objects[game.lvl];
     let player_alive = objects[PLAYER].alive;
     match (tcod.key, tcod.key.text(), player_alive) {
         // movement keys
@@ -174,7 +174,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
             if player_on_stairs {
                 let success: bool = next_level(tcod, game, all_objects);
                 if success {
-                    // TODO: If game.level > MAX_LVL: return WinExit
+                    // TODO: If game.level >= NUM_LVLS: return WinExit
                     return TookTurn;
                 } else {
                     return DidntTakeTurn;
@@ -318,15 +318,15 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
     // the list of objects in the game, by floor
-    let mut objects: Vec<Vec<Object>> = vec![vec![]; MAX_LVL as usize];
+    let mut objects: Vec<Vec<Object>> = vec![vec![]; NUM_LVLS as usize];
     objects[0].push(player);
 
     // make a Map of room objects
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        maps: vec![make_map(&mut objects, 1)],
+        maps: vec![make_map(&mut objects, 0)],
         messages: Messages::new(),
-        lvl: 1,
+        lvl: 0,
         version: env!("CARGO_PKG_VERSION").to_string(),
         turn: 0,
     };
@@ -344,8 +344,6 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
 
 
 fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
-    //let objects = &mut all_objects[game.lvl as usize - 1];
-
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
 
@@ -361,7 +359,7 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // render the screen
-        let lvl: usize = game.lvl as usize - 1;
+        let lvl: usize = game.lvl as usize;
         let fov_recompute = previous_player_position != (all_objects[lvl][PLAYER].pos());
         render_all(tcod, game, &mut all_objects[lvl], fov_recompute);
 

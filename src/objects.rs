@@ -10,6 +10,7 @@ use tcod::colors::*;
 use tcod::console::*;
 
 use crate::map::Map;
+use crate::map::make_map;
 use crate::menus::Messages;
 
 
@@ -220,7 +221,6 @@ impl Fighter {
     }
 
     pub fn kill_rewards(&mut self, xp: i32, game_level: i32) {
-        println!("{}", game_level as i64);
         self.xp += xp;
         self.karma -= xp * (game_level + 1);
     }
@@ -413,9 +413,16 @@ pub struct Game {
 }
 
 impl Game {
-    // TODO: Does Game need a new?
-    //pub fn new(objects: &mut Vec<Objects>) -> Self {
-    //}
+    pub fn new(objects: &mut Vec<Vec<Object>>) -> Self {
+        Game {
+            maps: vec![make_map(objects, 0)],
+            messages: Messages::new(),
+            lvl: 0,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            turn: 0,
+        }
+    }
+
     pub fn map(&mut self) -> &mut Map {
         return &mut self.maps[self.lvl];
     }

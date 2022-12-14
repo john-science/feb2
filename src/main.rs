@@ -49,7 +49,6 @@ use map::make_map;
 use map::Map;
 use menus::inventory_menu;
 use menus::menu;
-use menus::Messages;
 use menus::msgbox;
 use menus::Tcod;
 use moves::player_move_or_attack;
@@ -321,15 +320,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
     let mut objects: Vec<Vec<Object>> = vec![vec![]; NUM_LVLS as usize];
     objects[0].push(player);
 
-    // make a Map of room objects
-    let mut game = Game {
-        // generate map (at this point it's not drawn to the screen)
-        maps: vec![make_map(&mut objects, 0)],
-        messages: Messages::new(),
-        lvl: 0,
-        version: env!("CARGO_PKG_VERSION").to_string(),
-        turn: 0,
-    };
+    let mut game = Game::new(&mut objects);
 
     initialise_fov(tcod, &game.map());
 

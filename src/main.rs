@@ -67,14 +67,14 @@ fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: 
     let up: bool = if from_lvl < to_lvl { true } else { false };
     if up {
         // exists because we don't make all the maps at the start of the game. TODO: Maybe we should
-        assert!(objects[to_lvl].len() == 0);  // TODO: No going down. Yet.
+        if objects[to_lvl].len() == 0 {
+            // move the player up one level
+            let player = objects[from_lvl][PLAYER].clone();
+            objects[to_lvl].push(player);
 
-        // move the player up one level
-        let player = objects[from_lvl][PLAYER].clone();
-        objects[to_lvl].push(player);
-
-        // remove the player from the lower level
-        objects[from_lvl] = objects[from_lvl].split_off(1);
+            // remove the player from the lower level
+            objects[from_lvl] = objects[from_lvl].split_off(1);
+        }
     }/* else {
         // move the player down one level
         let player = objects[lvl][PLAYER].clone();

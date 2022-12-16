@@ -72,7 +72,55 @@ fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: 
 }
 
 
-// Advance to the next level
+fn go_up_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
+    if game.lvl == (NUM_LVLS as usize - 1) {
+        if all_objects[game.lvl][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
+            game.messages.add(
+                "You ascend from Purgatory.",
+                RED,
+            );
+            return false;
+        } else {
+            game.messages.add(
+                "Your karma is too low to leave Purgatory.",
+                RED,
+            );
+            return false;
+        }
+    } else {
+        game.messages.add(
+            "You ascend higher into Purgatory...",
+            RED,
+        );
+        game.lvl += 1;
+        change_player_level(all_objects, game.lvl - 1, game.lvl);
+        initialise_fov(tcod, &game.map());
+    }
+    return true;
+}
+
+
+fn go_down_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
+    if game.lvl == 0 {
+        game.messages.add(
+            "There is no going lower than where you are..",
+            RED,
+        );
+        return false;
+    } else {
+        game.messages.add(
+            "You descend lower into Purgatory...",
+            RED,
+        );
+        game.lvl -= 1;
+        change_player_level(all_objects, game.lvl + 1, game.lvl);
+        initialise_fov(tcod, &game.map());
+    }
+    return true;
+}
+
+
+// Advance to the next level (and create it from scratch)
 fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
     if game.lvl == (NUM_LVLS as usize - 1) {
         if all_objects[game.lvl][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
@@ -158,11 +206,27 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
         (Key { code: Text, .. }, ">", true) => {
             let player_on_stairs = objects
                 .iter()
-                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
+                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "up-stairs");
             if player_on_stairs {
                 let success: bool = next_level(tcod, game, all_objects);
                 if success {
                     // TODO: If game.level >= NUM_LVLS: return WinExit
+                    return TookTurn;
+                } else {
+                    return DidntTakeTurn;
+                }
+            }
+            return DidntTakeTurn;
+        }
+
+        // go down stairs, if the player is on them
+        (Key { code: Text, .. }, "<", true) => {
+            let player_on_stairs = objects
+                .iter()
+                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "down-stairs");
+            if player_on_stairs {
+                let success: bool = next_level(tcod, game, all_objects);
+                if success {
                     return TookTurn;
                 } else {
                     return DidntTakeTurn;

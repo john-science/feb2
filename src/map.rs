@@ -207,6 +207,12 @@ pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
             if rooms.is_empty() {
                 // this is the first room, where the player starts at
                 objects[PLAYER].set_pos(new_x, new_y);
+
+                if level > 0 {
+                    let mut down_stairs = Object::new(new_x, new_y, '<', "down-stairs", WHITE, false);
+                    down_stairs.always_visible = true;
+                    objects.push(down_stairs);
+                }
             } else {
                 // all rooms after the first:
                 // connect it to the previous room with a tunnel
@@ -234,11 +240,11 @@ pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
         }
     }
 
-    // create stairs at the center of the last room
+    // create up stairs at the center of the last room
     let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
-    let mut stairs = Object::new(last_room_x, last_room_y, '>', "stairs", WHITE, false);
-    stairs.always_visible = true;
-    objects.push(stairs);
+    let mut up_stairs = Object::new(last_room_x, last_room_y, '>', "up-stairs", WHITE, false);
+    up_stairs.always_visible = true;
+    objects.push(up_stairs);
 
     return map;
 }

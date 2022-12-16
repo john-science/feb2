@@ -64,22 +64,11 @@ use ui::render_all;
 
 
 fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: usize) {
-    let up: bool = if from_lvl < to_lvl { true } else { false };
-    if up {
-        // exists because we don't make all the maps at the start of the game. TODO: Maybe we should
-        if objects[to_lvl].len() == 0 {
-            // move the player up one level
-            let player = objects[from_lvl][PLAYER].clone();
-            objects[to_lvl].push(player);
+    let player = objects[from_lvl].swap_remove(PLAYER);
 
-            // remove the player from the lower level
-            objects[from_lvl] = objects[from_lvl].split_off(1);
-        }
-    }/* else {
-        // move the player down one level
-        let player = objects[lvl][PLAYER].clone();
-        // TODO: Support going down
-    } */
+    let mut tmp: Vec<Object> = vec![player];
+    tmp.extend(objects[to_lvl].drain(0..));
+    objects[to_lvl] = tmp;
 }
 
 

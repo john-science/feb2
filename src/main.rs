@@ -32,6 +32,7 @@ use constants::AUTHOR_LINE;
 use constants::CHARACTER_SCREEN_WIDTH;
 use constants::FONT_IMG;
 use constants::GAME_TITLE;
+use constants::HELP_SCREEN_WIDTH;
 use constants::KARMA_TO_ASCEND;
 use constants::LIMIT_FPS;
 use constants::MAP_HEIGHT;
@@ -124,7 +125,6 @@ fn go_down_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Obj
 
 
 // TODO: Key "m" should open a scrollable messages window.
-// TODO: Hitting "?" should pop up a command menu. (Could we make this more configurable/automatic?)
 // TODO: Fullscreen isn't working.
 fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> PlayerAction {
     use tcod::input::KeyCode::*;
@@ -292,6 +292,29 @@ Turn: {}
 
         // Escape to exit game
         (Key { code: Escape, .. }, _, _) => { return Exit; }
+
+        // TODO: Would be cool if this could be auto-generated from the options
+        // Help Menu
+        (Key { code: Text, .. }, "?", true) => {
+                let msg = format!(
+"Help Menu
+
+Commands:
+
+* arrow keys and number pad to move
+* escape key to exit/save game
+* '>' go up stairs (you're standing on)
+* '<' go down stairs (you're standing on)
+* 'c' character screen
+* 'd' drop item (from your inventory)
+* 'g' grab item from floor
+* 'i' view your inventory
+",
+            );
+            msgbox(&msg, HELP_SCREEN_WIDTH, &mut tcod.root);
+
+            return DidntTakeTurn;
+        }
 
         (_, _, _) => { return DidntTakeTurn; }
     };

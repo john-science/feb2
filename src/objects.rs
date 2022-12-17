@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use tcod::colors::*;
 use tcod::console::*;
 
+use crate::constants::NUM_LVLS;
 use crate::map::Map;
 use crate::map::make_map;
 use crate::menus::Messages;
@@ -406,18 +407,23 @@ impl Object {
 #[derive(Serialize, Deserialize)]
 pub struct Game {
     pub maps: Vec<Map>,
-    pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
+    pub up_stairs: Vec<(i32, i32)>,
+    pub down_stairs: Vec<(i32, i32)>,
     pub lvl: usize,
+    pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
     pub version: String,
     pub turn: u32,
 }
 
 impl Game {
     pub fn new(objects: &mut Vec<Vec<Object>>) -> Self {
+        let (m, up, down) = Game::make_maps(objects);
         Game {
-            maps: vec![make_map(objects, 0)],
-            messages: Messages::new(),
+            maps: m,
+            up_stairs: up,
+            down_stairs: down,
             lvl: 0,
+            messages: Messages::new(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             turn: 0,
         }
@@ -425,5 +431,18 @@ impl Game {
 
     pub fn map(&mut self) -> &mut Map {
         return &mut self.maps[self.lvl];
+    }
+
+    fn make_maps(objects: &mut Vec<Vec<Object>>) -> (Vec<Map>, Vec<(i32, i32)>, Vec<(i32, i32)>) {
+        let mut maps: Vec<Map> = vec![];
+        let mut up_stairs: Vec<(i32, i32)> = vec![];
+        let mut down_stairs: Vec<(i32, i32)> = vec![];
+        for i in 0..NUM_LVLS {
+            let (m, up, down) = make_map(objects, i as usize);
+            maps.push(m);
+            up_stairs.push(up);
+            down_stairs.push(down);
+        }
+        return (maps, up_stairs, down_stairs);
     }
 }

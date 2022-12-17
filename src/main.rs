@@ -45,7 +45,6 @@ use constants::SCREEN_WIDTH;
 use equipment::drop_item;
 use equipment::pick_item_up;
 use equipment::player_use_item;
-use map::make_map;
 use map::Map;
 use menus::inventory_menu;
 use menus::menu;
@@ -94,6 +93,8 @@ fn go_up_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
         );
         game.lvl += 1;
         change_player_level(all_objects, game.lvl - 1, game.lvl);
+        all_objects[game.lvl][PLAYER].x = game.down_stairs[game.lvl].0;
+        all_objects[game.lvl][PLAYER].y = game.down_stairs[game.lvl].1;
         initialise_fov(tcod, &game.map());
     }
     return true;
@@ -103,47 +104,19 @@ fn go_up_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
 fn go_down_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
     if game.lvl == 0 {
         game.messages.add(
-            "There is no going lower than where you are..",
+            "There is no going lower than where you are.",
             RED,
         );
         return false;
     } else {
         game.messages.add(
-            "You descend lower into Purgatory...",
+            "You descend back down into Purgatory.",
             RED,
         );
         game.lvl -= 1;
         change_player_level(all_objects, game.lvl + 1, game.lvl);
-        initialise_fov(tcod, &game.map());
-    }
-    return true;
-}
-
-
-// Advance to the next level (and create it from scratch)
-fn next_level(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) -> bool {
-    if game.lvl == (NUM_LVLS as usize - 1) {
-        if all_objects[game.lvl][PLAYER].fighter.as_ref().unwrap().karma >= KARMA_TO_ASCEND {
-            game.messages.add(
-                "You ascend from Purgatory.",
-                RED,
-            );
-            return false;
-        } else {
-            game.messages.add(
-                "Your karma is too low to leave Purgatory.",
-                RED,
-            );
-            return false;
-        }
-    } else {
-        game.messages.add(
-            "You ascend higher into Purgatory...",
-            RED,
-        );
-        game.lvl += 1;
-        change_player_level(all_objects, game.lvl - 1, game.lvl);
-        game.maps.push(make_map(all_objects, game.lvl));
+        all_objects[game.lvl][PLAYER].x = game.up_stairs[game.lvl].0;
+        all_objects[game.lvl][PLAYER].y = game.up_stairs[game.lvl].1;
         initialise_fov(tcod, &game.map());
     }
     return true;
@@ -208,7 +181,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
                 .iter()
                 .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "up-stairs");
             if player_on_stairs {
-                let success: bool = next_level(tcod, game, all_objects);
+                let success: bool = go_up_level(tcod, game, all_objects);
                 if success {
                     // TODO: If game.level >= NUM_LVLS: return WinExit
                     return TookTurn;
@@ -225,7 +198,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
                 .iter()
                 .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "down-stairs");
             if player_on_stairs {
-                let success: bool = next_level(tcod, game, all_objects);
+                let success: bool = go_down_level(tcod, game, all_objects);
                 if success {
                     return TookTurn;
                 } else {

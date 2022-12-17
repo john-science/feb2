@@ -172,10 +172,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 }
 
 
-// TODO: Player cannot visit old levels!
-pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
+pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
+    let mut down_posi: (i32, i32) = (-1, -1);
     let objects = &mut all_objects[level];
 
     // generate a random set of roooms
@@ -205,10 +205,12 @@ pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
             let (new_x, new_y) = new_room.center();
 
             if rooms.is_empty() {
-                // this is the first room, where the player starts at
-                objects[PLAYER].set_pos(new_x, new_y);
-
-                if level > 0 {
+                down_posi = (new_x, new_y);
+                if level == 0 {
+                    // this is the first room, where the player starts at
+                    objects[PLAYER].set_pos(new_x, new_y);
+                    down_posi = (new_x, new_y);
+                } else {
                     let mut down_stairs = Object::new(new_x, new_y, '<', "down-stairs", WHITE, false);
                     down_stairs.always_visible = true;
                     objects.push(down_stairs);
@@ -246,5 +248,5 @@ pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> Map {
     up_stairs.always_visible = true;
     objects.push(up_stairs);
 
-    return map;
+    return (map, (last_room_x, last_room_y), down_posi);
 }

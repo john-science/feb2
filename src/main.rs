@@ -11,6 +11,7 @@ use tcod::colors::*;
 use tcod::console::*;
 use tcod::input::{self, Event, Key};
 use tcod::map::{Map as FovMap};
+//use tcod::tileset::{load_tilesheet};
 
 // Import Locally
 mod ai_algos;
@@ -59,8 +60,6 @@ use objects::Object;
 use player::level_up;
 use player::xp_to_level_up;
 use ui::render_all;
-
-// TODO: The color of potions, or maybe the font, is hard to read.
 
 
 fn change_player_level(objects: &mut Vec<Vec<Object>>, from_lvl: usize, to_lvl: usize) {
@@ -517,14 +516,14 @@ fn main() {
 
     // initialize the TCOD "Root" object
     let root: Root = Root::initializer()
-        .font(FONT_IMG, FontLayout::Tcod)
-        .font_type(FontType::Greyscale)
+        .font(FONT_IMG, FontLayout::AsciiInRow)
+        .font_type(FontType::Default)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title(GAME_TITLE)
         .init();
 
     // use the TCOD "Root" object to create a mutable TCOD struct
-    let mut tcod = Tcod {
+    let mut tcod0 = Tcod {
         root,
         con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
         panel: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
@@ -533,5 +532,5 @@ fn main() {
         mouse: Default::default(),
     };
 
-    main_menu(&mut tcod);
+    main_menu(&mut tcod0);
 }

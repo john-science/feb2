@@ -6,7 +6,7 @@ use tcod::colors::Color;
 // Top-level strings
 pub const GAME_TITLE: &str = "February Second";
 pub const AUTHOR_LINE: &str = "by John Science";
-pub const FONT_IMG: &str = "dejavu16x16.png";
+pub const FONT_IMG: &str = "bisasam_16x16.png";
 pub const SAVE_FILE: &str = ".feb2.savegame";
 
 // player will always be the first object

@@ -93,8 +93,7 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
             }
             if *explored {
                 // show explored tiles only (any visible tile is explored already)
-                tcod.con
-                    .set_char_background(x, y, color, BackgroundFlag::Set);
+                tcod.con.set_char_background(x, y, color, BackgroundFlag::Set);
             }
         }
     }

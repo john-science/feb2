@@ -511,6 +511,9 @@ fn main_menu(tcod: &mut Tcod) {
 
 
 fn main() {
+    // Do some validation on data
+    assert!(NUM_LVLS % 2 == 1);
+
     // set the FPS
     tcod::system::set_fps(LIMIT_FPS);
 

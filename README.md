@@ -37,7 +37,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * What about Health/Mana regeneration?
 * [ ] Different levels should have different map-gen algos (at least by level name).
   * The middle level should be a maze of some kind.
-    * (There should be an odd number of levels.)
+    * [X] There should be an odd number of levels.
 * [ ] When you die, you should restart in the same Purgatory.
   * Any knowledge/skill you gained will be maintained, as well as your karma score.
   * But your stats and items will be reset.

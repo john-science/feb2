@@ -101,11 +101,13 @@ fn loot_table() -> Vec<Loot> {
         Loot::new('[', "shield", ORANGE, Item::Shield, Slot::Hand, 0, 3, 0, 10, 19, 15),
         Loot::new('[', "buckler", LIGHT_ORANGE, Item::Shield, Slot::Hand, 0, 2, 0, 7, 16, 25),
         // potions
-        Loot::new((b'@'+109 as u8) as char, "healing potion", VIOLET, Item::HealPot, Slot::Head, 0, 0, 0, -99, 99, 35),
+        Loot::new((173 as u8) as char, "healing potion", VIOLET, Item::HealPot, Slot::Head, 0, 0, 0, -99, 99, 35),
         // scrolls
         Loot::new('~', "scroll of lightning bolt", LIGHT_BLUE, Item::LightningScroll, Slot::Head, 0, 0, 0, 3, 99, 25),
         Loot::new('~', "scroll of fireball", RED, Item::FireballScroll, Slot::Head, 0, 0, 0, 1, 99, 25),
         Loot::new('~', "scroll of confusion", LIGHT_GREEN, Item::ConfuseScroll, Slot::Head, 0, 0, 0, 0, 99, 10),
+        // books
+        // Loot::new((247 as u8) as char, "book of something", LIGHT_GREEN, Item::ConfuseScroll, Slot::Head, 0, 0, 0, 0, 99, 10),
     ];
 }
 

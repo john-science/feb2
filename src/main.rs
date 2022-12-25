@@ -378,6 +378,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
         RED,
     );
 
+    // TODO: This will be needed for death restarts
     let _start_objects: Vec<Vec<Object>> = objects.clone();
 
     return (game, objects);

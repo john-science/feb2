@@ -267,9 +267,20 @@ impl Object {
         }
     }
 
+    pub fn get_color(&self) -> Color {
+        if let Some(fighter) = self.fighter.as_ref() {
+            let frac: f32 = fighter.hp as f32 / fighter.base_max_hp as f32;
+            if frac >= 0.95 { return WHITE; }
+            else {
+                // player / NPC health displayed by color
+                return Color{r: 255 - (255.0 * frac) as u8, g: (255.0 * frac) as u8, b: 0};
+            }
+        } else { return self.color; }
+    }
+
     // set the color and then draw the character that represents this object at its position
     pub fn draw(&self, con: &mut dyn Console) {
-        con.set_default_foreground(self.color);
+        con.set_default_foreground(self.get_color());
         con.put_char(self.x, self.y, self.chr, BackgroundFlag::None);
     }
 

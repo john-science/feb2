@@ -55,7 +55,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * (You need to drop all items to go up the final staircase.)
 
 
-> Monster Design Ideas
+> NPC Design Ideas
 
 * [ ] Orcs and Trolls love battle -> +karma
 * [ ] Orcs and Trolls love killing you -> +karma

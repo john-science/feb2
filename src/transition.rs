@@ -1,5 +1,5 @@
 /*
-  A Transition is used to generate monsters and items by level.
+  A Transition is used to generate NPCs and items by level.
  */
 
 pub struct Transition {

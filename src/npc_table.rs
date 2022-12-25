@@ -2,7 +2,7 @@
  Implementation of the NPC Table
  */
 use rand::distributions::{IndependentSample, Weighted, WeightedChoice};
-use tcod::colors::*;
+use tcod::colors::WHITE;
 
 use crate::objects::Ai;
 use crate::objects::Fighter;
@@ -13,7 +13,6 @@ use crate::objects::Object;
 pub struct NPC {
     pub symbol: char,
     pub name: String,
-    pub color: Color,
     pub ai: Ai,
     pub max_hp: i32,
     pub defense: i32,
@@ -29,7 +28,6 @@ impl NPC {
     pub fn new(
         symbol: char,
         name: &str,
-        color: Color,
         ai: Ai,
         max_hp: i32,
         defense: i32,
@@ -45,7 +43,6 @@ impl NPC {
             NPC {
             symbol: symbol,
             name: name.to_string(),
-            color: color,
             ai: ai,
             max_hp: max_hp,
             defense: defense,
@@ -60,7 +57,7 @@ impl NPC {
 
     pub fn generate(&self) -> Object {
         // NOTE: Setting to an impossible location
-        let mut npc = Object::new(-1, -1, self.symbol, &self.name, self.color, true);
+        let mut npc = Object::new(-1, -1, self.symbol, &self.name, WHITE, true);
         npc.ai = Some(self.ai.clone());
         let mut fighter = Fighter::new(self.max_hp, self.defense, self.attack, self.xp, true);
         fighter.hp = self.start_hp;
@@ -73,12 +70,12 @@ impl NPC {
 
 fn npc_table() -> Vec<NPC> {
     return vec![
-        NPC::new('I', "imp", LIGHTER_GREEN, Ai::Basic, 10, 0, 8, 10, 1, -99, 99, 1),
-        NPC::new('O', "orc", DESATURATED_GREEN, Ai::Basic, 20, 0, 4, 35, 20, -99, 19, 100),
-        NPC::new('T', "troll", DARKER_GREEN, Ai::Basic, 60, 2, 8, 100, 30, 0, 19, 25),
-        NPC::new('M', "minotaur", DARK_ORANGE, Ai::Basic, 60, 3, 9, 100, 60, 10, 10, 100),
-        NPC::new('W', "Wraith", LIGHT_GREY, Ai::Basic, 100, 3, 9, 100, 100, 17, 19, 100),
-        NPC::new('D', "demon", WHITE, Ai::Basic, 200, 12, 12, 100, 200, 20, 99, 250),
+        NPC::new('I', "imp", Ai::Basic, 10, 0, 8, 10, 1, -99, 99, 1),
+        NPC::new('O', "orc", Ai::Basic, 20, 0, 4, 35, 20, -99, 19, 100),
+        NPC::new('T', "troll", Ai::Basic, 60, 2, 8, 100, 30, 0, 19, 25),
+        NPC::new('M', "minotaur", Ai::Basic, 60, 3, 9, 100, 60, 10, 10, 100),
+        NPC::new('W', "Wraith", Ai::Basic, 100, 3, 9, 100, 100, 17, 19, 100),
+        NPC::new('D', "demon", Ai::Basic, 200, 12, 12, 100, 200, 20, 99, 250),
     ];
 }
 

@@ -17,7 +17,6 @@ use crate::constants::SCREEN_WIDTH;
 use crate::objects::Object;
 
 
-// TODO: Move to its own file?
 pub struct Tcod {
     pub root: Root,
     pub con: Offscreen,

@@ -123,7 +123,7 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
     // attacked and doesn't move
     game.messages.add(
         format!(
-            "{} is dead! (+{}XP / -{}K)",  // TODO: It's not death.
+            "{} is dead! (+{}XP / -{}K)",
             npc.name,
             npc.fighter.as_ref().unwrap().xp,
             npc.fighter.as_ref().unwrap().xp * (game.lvl as i32 + 1) // TODO: This should come from the actual rewards
@@ -314,7 +314,6 @@ impl Object {
         return xp;
     }
 
-    // TODO: Should this be in the Object class?
     pub fn melee_attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage
         let damage = self.fighter.as_ref().unwrap().power() - target.fighter.as_ref().unwrap().defense();
@@ -410,7 +409,7 @@ pub struct Game {
     pub up_stairs: Vec<(i32, i32)>,
     pub down_stairs: Vec<(i32, i32)>,
     pub lvl: usize,
-    pub messages: Messages,  // TODO: The entire history is saved, but it's not scrollable.
+    pub messages: Messages,
     pub version: String,
     pub turn: u32,
 }

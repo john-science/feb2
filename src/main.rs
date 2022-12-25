@@ -207,7 +207,7 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
             return DidntTakeTurn;
         }
 
-        // TODO: Combine inventory and character stuff?
+        // TODO: Show inventory (or at least equipment) on character screen.
         (Key { code: Text, .. }, "c", true) => {
             // show character information
             let player = &objects[PLAYER];
@@ -257,7 +257,7 @@ Turn: {}
                     player_use_item(inventory_index, tcod, game, objects);
                 }
             }
-            return DidntTakeTurn;
+            return MenuAction;
         }
 
         // Pick up an item
@@ -385,6 +385,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
 fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>>) {
     // force FOV "recompute" first time through the game loop
     let mut previous_player_position = (-1, -1);
+    let mut last_action: PlayerAction = PlayerAction::DidntTakeTurn;
 
     // the game loop!
     while !tcod.root.window_closed() {
@@ -404,6 +405,11 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
 
         tcod.root.flush();
 
+        if last_action == PlayerAction::MenuAction {
+            last_action = PlayerAction::DidntTakeTurn;
+            continue;
+        }
+
         // level up if needed
         level_up(tcod, game, &mut all_objects[lvl]);
 
@@ -418,13 +424,15 @@ fn play_game(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Object>
         }
 
         // let npcs take their turn
-        if all_objects[lvl][PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
+        if player_action == PlayerAction::TookTurn && all_objects[lvl][PLAYER].alive {
             for id in 0..all_objects[lvl].len() {
                 if id != PLAYER && all_objects[lvl][id].ai.is_some() {
                     ai_take_turn(id, tcod, game, &mut all_objects[lvl]);
                 }
             }
         }
+
+        last_action = player_action;
     }
 }
 

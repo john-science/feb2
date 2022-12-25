@@ -13,6 +13,7 @@ use crate::utils::mut_two;
 pub enum PlayerAction {
     TookTurn,
     DidntTakeTurn,
+    MenuAction,
     Exit,
 }
 

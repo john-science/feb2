@@ -94,7 +94,6 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
 
     // print all the options
     for (index, option_text) in options.iter().enumerate() {
-        //let menu_letter: char = (b'a' + index as u8) as char;
         let menu_letter: char = INVENTORY_KEYS.chars().nth(index).unwrap();
         let text: String = format!("({}) {}", menu_letter, option_text.as_ref());
         window.print_ex(

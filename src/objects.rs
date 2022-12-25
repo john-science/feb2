@@ -140,7 +140,6 @@ fn npc_death(npc: &mut Object, game: &mut Game) {
 }
 
 
-// TODO: Add skills
 // combat-related properties and methods (player or NPC)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {

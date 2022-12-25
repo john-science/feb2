@@ -50,7 +50,6 @@ pub const INVENTORY_WIDTH: i32 = 50;
 pub const INVENTORY_KEYS: &'static str = "abcdefghijklmnopqrstuvwxyz12345678";
 pub const INVENTORY_MAX: usize = 34;
 
-// TODO: Should depend on skills
 // magic items
 pub const HEAL_AMOUNT: i32 = 40;
 pub const LIGHTNING_DAMAGE: i32 = 40;

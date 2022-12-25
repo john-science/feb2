@@ -378,6 +378,8 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>) {
         RED,
     );
 
+    let _start_objects: Vec<Vec<Object>> = objects.clone();
+
     return (game, objects);
 }
 

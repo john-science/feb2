@@ -26,7 +26,7 @@ pub fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
         player.level += 1;
         game.messages.add(
             format!(
-                "Your battle skills grow stronger! You reached level {}!",
+                "You grow stronger! You reached level {}!",
                 player.level
             ),
             YELLOW,

@@ -35,7 +35,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * Perhaps each game words like "troll", "orc", "imp", and "ghost" should rotate?
 * [ ] There is no food or sleep in Purgatory.
   * What about Health/Mana regeneration?
-* [ ] NPCs health should be shown by color: low-to-high
+* [X] NPCs health should be shown by color: low-to-high
 * [ ] Different levels should have different map-gen algos (at least by level name).
   * The middle level should be a maze of some kind.
     * [X] There should be an odd number of levels.

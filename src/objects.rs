@@ -108,6 +108,7 @@ impl DeathCallback {
 // TODO: Game should restart after the "you died" screen.
 fn player_death(player: &mut Object, game: &mut Game) {
     // the game ended!
+    game.day += 1;
     game.messages.add("You died. But you were already dead. This is not the end.", RED);
 
     // for added effect, transform the player into a corpse!
@@ -421,6 +422,7 @@ pub struct Game {
     pub lvl: usize,
     pub messages: Messages,
     pub version: String,
+    pub day: u32,
     pub turn: u32,
 }
 
@@ -434,6 +436,7 @@ impl Game {
             lvl: 0,
             messages: Messages::new(),
             version: env!("CARGO_PKG_VERSION").to_string(),
+            day: 0,
             turn: 0,
         }
     }

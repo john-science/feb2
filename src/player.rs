@@ -3,11 +3,13 @@
  */
 use tcod::colors::YELLOW;
 
+use crate::constants::CHARACTER_SCREEN_WIDTH;
 use crate::constants::LEVEL_SCREEN_WIDTH;
 use crate::constants::LEVEL_UP_BASE;
 use crate::constants::LEVEL_UP_FACTOR;
 use crate::constants::PLAYER;
 use crate::menus::menu;
+use crate::menus::msgbox;
 use crate::menus::Tcod;
 use crate::objects::Game;
 use crate::objects::Object;
@@ -64,3 +66,38 @@ pub fn level_up(tcod: &mut Tcod, game: &mut Game, objects: &mut [Object]) {
         }
     }
 }
+
+
+// TODO: Add inventory and anything else players are proud of.
+pub fn character_screen(tcod: &mut Tcod, player: &Object, game: &Game) {
+    let level = player.level;
+    let level_up_xp = xp_to_level_up(player.level);
+    if let Some(fighter) = player.fighter.as_ref() {
+        let msg = format!(
+"Character information
+
+Karma: {}
+Level: {}
+Experience: {} of {}
+
+Maximum HP: {}
+Attack: {}
+Defense: {}
+
+Day: {}
+Turn: {}
+",
+        fighter.karma,
+        level,
+        fighter.xp,
+        level_up_xp,
+        fighter.max_hp(),
+        fighter.power(),
+        fighter.defense(),
+        game.day,
+        game.turn,
+    );
+    msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
+    }
+}
+

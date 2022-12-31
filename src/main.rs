@@ -30,7 +30,6 @@ mod ui;
 mod utils;
 use ai_algos::ai_take_turn;
 use constants::AUTHOR_LINE;
-use constants::CHARACTER_SCREEN_WIDTH;
 use constants::FONT_IMG;
 use constants::GAME_TITLE;
 use constants::HELP_SCREEN_WIDTH;
@@ -57,8 +56,8 @@ use moves::PlayerAction;
 use objects::Fighter;
 use objects::Game;
 use objects::Object;
+use player::character_screen;
 use player::level_up;
-use player::xp_to_level_up;
 use ui::render_all;
 
 
@@ -207,39 +206,9 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
             return DidntTakeTurn;
         }
 
-        // TODO: Show inventory (or at least equipment) on character screen.
         (Key { code: Text, .. }, "c", true) => {
-            // show character information
             let player = &objects[PLAYER];
-            let level = player.level;
-            let level_up_xp = xp_to_level_up(player.level);
-            if let Some(fighter) = player.fighter.as_ref() {
-                let msg = format!(
-"Character information
-
-Karma: {}
-Level: {}
-Experience: {} of {}
-
-Maximum HP: {}
-Attack: {}
-Defense: {}
-
-Day: 0
-Turn: {}
-",
-                    fighter.karma,
-                    level,
-                    fighter.xp,
-                    level_up_xp,
-                    fighter.max_hp(),
-                    fighter.power(),
-                    fighter.defense(),
-                    game.turn,
-                );
-                msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
-            }
-
+            character_screen(tcod, player, game);
             return DidntTakeTurn;
         }
 

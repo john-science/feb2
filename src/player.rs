@@ -1,6 +1,7 @@
 /*
  Tools for dealing with Player logic
  */
+use tcod::colors::WHITE;
 use tcod::colors::YELLOW;
 
 use crate::constants::CHARACTER_SCREEN_WIDTH;
@@ -98,6 +99,25 @@ Turn: {}
         game.turn,
     );
     msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
+    }
+}
+
+
+// TODO: This needs to agree with main::new_game
+pub fn reincarnate_reset(player: &mut Object) {
+    player.alive = true;
+    player.chr = '@';
+    player.color = WHITE;
+    player.level = 0;
+    player.x = 0;
+    player.y = 0;
+    if let Some(fighter) = player.fighter.as_mut() {
+        fighter.hp = 100;
+        fighter.base_max_hp = 100;
+        fighter.base_defense = 2;
+        fighter.base_power = 3;
+        fighter.xp = 0;
+        fighter.inventory = vec![];
     }
 }
 

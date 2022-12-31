@@ -58,6 +58,7 @@ use objects::Game;
 use objects::Object;
 use player::character_screen;
 use player::level_up;
+use player::reincarnate_reset;
 use ui::render_all;
 
 
@@ -320,13 +321,29 @@ fn save_game(game: &Game,
 }
 
 
-
 fn load_game() -> Result<(Game, Vec<Vec<Object>>, Vec<Vec<Object>>), Box<dyn Error>> {
     let mut json_save_state = String::new();
     let mut file = File::open(SAVE_FILE)?;
     file.read_to_string(&mut json_save_state)?;
     let result = serde_json::from_str::<(Game, Vec<Vec<Object>>, Vec<Vec<Object>>)>(&json_save_state)?;
     Ok(result)
+}
+
+
+fn reincarnate(game: &mut Game,
+               objects: &mut Vec<Vec<Object>>,
+               start_objects: &Vec<Vec<Object>>) {
+    // copy over objects
+    let mut player: Object = objects[game.lvl][0].clone();
+    reincarnate_reset(&mut player);
+    (player.x, player.y) = game.start_pos;
+    *objects = start_objects.clone();
+    objects[0][PLAYER] = player;
+
+    // update game
+    game.lvl = 0;
+    game.day += 1;
+    game.turn += 1;
 }
 
 
@@ -383,7 +400,12 @@ fn play_game(tcod: &mut Tcod, game: &mut Game,
 
         // handle death and reincarnation
         if !all_objects[lvl][PLAYER].alive {
+            last_action = PlayerAction::DidntTakeTurn;
             character_screen(tcod, &all_objects[lvl][PLAYER], game);
+            reincarnate(game, all_objects, start_objects);
+            initialise_fov(tcod, &game.map());
+            tcod.root.flush();
+            continue;
         }
 
         tcod.root.flush();

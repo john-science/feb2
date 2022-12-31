@@ -381,6 +381,11 @@ fn play_game(tcod: &mut Tcod, game: &mut Game,
         let fov_recompute = previous_player_position != (all_objects[lvl][PLAYER].pos());
         render_all(tcod, game, &mut all_objects[lvl], fov_recompute);
 
+        // handle death and reincarnation
+        if !all_objects[lvl][PLAYER].alive {
+            character_screen(tcod, &all_objects[lvl][PLAYER], game);
+        }
+
         tcod.root.flush();
 
         if last_action == PlayerAction::MenuAction {

@@ -43,7 +43,7 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * [ ] Skills can improve doing things (exploring, fighting, spell-casting).
   * [ ] Skill can improve by reading books and spells.
   * [ ] Skills should improve the affects of melee fighting and spell-casting.
-* [ ] When you die, you should restart in the same Purgatory.
+* [X] When you die, you should restart in the same Purgatory.
   * Any knowledge/skill you gained will be maintained, as well as your karma score.
   * But your stats and items will be reset.
   * Purgatory will be reset.

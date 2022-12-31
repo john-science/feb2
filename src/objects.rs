@@ -108,7 +108,7 @@ impl DeathCallback {
 // TODO: Game should restart after the "you died" screen.
 fn player_death(player: &mut Object, game: &mut Game) {
     // the game ended!
-    game.messages.add("You died!", RED);
+    game.messages.add("You died. But you were already dead. This is not the end.", RED);
 
     // for added effect, transform the player into a corpse!
     player.alive = false;

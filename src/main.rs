@@ -377,7 +377,7 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>, Vec<Vec<Object>>) {
 
     // a welcome message
     game.messages.add(
-        "Welcome stranger! Ascend from Purgatory, or be stuck here forever.",
+        "You wake up in Purgatory. Ascend from this place, or be stuck here forever.",
         RED,
     );
 

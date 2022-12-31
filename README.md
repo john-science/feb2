@@ -69,3 +69,27 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
 * [ ] Starving Ghoul - Starts at low health and attacks until killed or healed
 * [ ] Vampires and Werewolves - Can be killed or Cured.
 
+
+## Resources
+
+
+### Resources I Definitely Used
+
+This project will start out as an exercise in learning Rust by making another Roguelite. Which is one of
+my go-to projects for new languages. As such, the first resources I used were for Rust and `tcod-rs`.
+
+* [Offficial Rust Learning](https://www.rust-lang.org/learn/)
+* [Official Rust Book](https://doc.rust-lang.org/book/title-page.html)
+* [Roguelite tutorial with tcod-rs](https://tomassedovic.github.io/roguelike-tutorial/)
+* [libtcod library](https://github.com/libtcod/libtcod)
+
+
+### Other Great Roguelike Dev Resources
+
+* [Roguelike Dev Resources!](https://github.com/marukrap/RoguelikeDevResources)
+* [Procedural Content Gen Wiki](http://pcg.wikidot.com/category-pcg-algorithms)
+* [Wave Function Collapse / Constraint Optimization](https://bfnightly.bracketproductions.com/chapter_33.html)
+* [Brogue Level Gen](https://www.rockpapershotgun.com/how-do-roguelikes-generate-levels)
+* [Dungeon Generation - Binding of Isaac](https://www.boristhebrave.com/2020/09/12/dungeon-generation-in-binding-of-isaac/)
+* [How Gungeon Makes Every Run Unique](https://www.cbr.com/enter-the-gungeon-variety-indie-roguelike/)
+

@@ -32,7 +32,6 @@ use ai_algos::ai_take_turn;
 use constants::AUTHOR_LINE;
 use constants::FONT_IMG;
 use constants::GAME_TITLE;
-use constants::HELP_SCREEN_WIDTH;
 use constants::KARMA_TO_ASCEND;
 use constants::LIMIT_FPS;
 use constants::MAP_HEIGHT;
@@ -47,6 +46,7 @@ use equipment::drop_item;
 use equipment::pick_item_up;
 use equipment::player_use_item;
 use map::Map;
+use menus::help_menu;
 use menus::inventory_menu;
 use menus::menu;
 use menus::msgbox;
@@ -262,26 +262,9 @@ fn handle_keys(tcod: &mut Tcod, game: &mut Game, all_objects: &mut Vec<Vec<Objec
         // Escape to exit game
         (Key { code: Escape, .. }, _, _) => { return Exit; }
 
-        // TODO: Would be cool if this could be auto-generated from the options
         // Help Menu
         (Key { code: Text, .. }, "?", true) => {
-                let msg = format!(
-"Help Menu
-
-Commands:
-
-* arrow keys and number pad to move
-* escape key to exit/save game
-* '>' go up stairs (you're standing on)
-* '<' go down stairs (you're standing on)
-* 'c' character screen
-* 'd' drop item (from your inventory)
-* 'g' grab item from floor
-* 'i' view your inventory
-",
-            );
-            msgbox(&msg, HELP_SCREEN_WIDTH, &mut tcod.root);
-
+            help_menu(tcod);
             return DidntTakeTurn;
         }
 

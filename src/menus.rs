@@ -9,6 +9,7 @@ use tcod::input::{Key, Mouse};
 use tcod::map::{Map as FovMap};
 
 // Import Locally
+use crate::constants::HELP_SCREEN_WIDTH;
 use crate::constants::INVENTORY_KEYS;
 use crate::constants::INVENTORY_MAX;
 use crate::constants::INVENTORY_WIDTH;
@@ -126,6 +127,26 @@ pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut R
 pub fn msgbox(text: &str, width: i32, root: &mut Root) {
     let options: &[&str] = &[];
     menu(text, options, width, root);
+}
+
+
+pub fn help_menu(tcod: &mut Tcod) {
+    let msg = format!(
+"Help Menu
+
+Commands:
+
+* arrow keys and number pad to move
+* escape key to exit/save game
+* '>' go up stairs (you're standing on)
+* '<' go down stairs (you're standing on)
+* 'c' character screen
+* 'd' drop item (from your inventory)
+* 'g' grab item from floor
+* 'i' view your inventory
+",
+            );
+            msgbox(&msg, HELP_SCREEN_WIDTH, &mut tcod.root);
 }
 
 

@@ -19,3 +19,6 @@ Cargo.lock
 # Editor Artifacts
 *.swp
 
+# Unrelated Exploratory Scripts
+*.py
+

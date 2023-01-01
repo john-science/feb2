@@ -116,14 +116,14 @@ fn player_death(player: &mut Object, game: &mut Game) {
 
 // TODO: This doesn't handle one npc killing another.
 fn npc_death(npc: &mut Object, game: &mut Game) {
-    // transform it into a nasty corpse! it doesn't block, can't be
-    // attacked and doesn't move
+    // transform it into a corpse! it doesn't block,
+    // can't be attacked and doesn't move
     game.messages.add(
         format!(
             "{} is dead! (+{}XP / -{}K)",
             npc.name,
             npc.fighter.as_ref().unwrap().xp,
-            npc.fighter.as_ref().unwrap().xp * (game.lvl as i32 + 1) // TODO: This should come from the actual rewards
+            Fighter::kill_karma(npc.fighter.as_ref().unwrap().xp, game.lvl as i32)
         ),
         ORANGE,
     );
@@ -219,7 +219,11 @@ impl Fighter {
 
     pub fn kill_rewards(&mut self, xp: i32, game_level: i32) {
         self.xp += xp;
-        self.karma -= xp * (game_level + 1);
+        self.karma += Fighter::kill_karma(xp, game_level);
+    }
+
+    pub fn kill_karma(xp: i32, game_level: i32) -> i32 {
+        return -xp * (game_level + 1);
     }
 }
 

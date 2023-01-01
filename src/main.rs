@@ -353,6 +353,9 @@ fn new_game(tcod: &mut Tcod) -> (Game, Vec<Vec<Object>>, Vec<Vec<Object>>) {
     player.alive = true;
     player.fighter = Some(Fighter::new(100, 2, 3, 0, false));
 
+    // NOTE: This is here to ensure the first rebirth matches all following reincarnations
+    reincarnate_reset(&mut player);
+
     // the list of objects in the game, by floor
     let mut objects: Vec<Vec<Object>> = vec![vec![]; NUM_LVLS as usize];
     objects[0].push(player);

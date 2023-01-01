@@ -103,7 +103,6 @@ Turn: {}
 }
 
 
-// TODO: This needs to agree with main::new_game
 pub fn reincarnate_reset(player: &mut Object) {
     player.alive = true;
     player.chr = '@';

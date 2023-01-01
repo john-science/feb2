@@ -70,11 +70,11 @@ impl NPC {
 
 fn npc_table() -> Vec<NPC> {
     return vec![
-        NPC::new('I', "imp", Ai::Basic, 10, 0, 8, 10, 1, -99, 99, 1),
+        NPC::new('I', "imp", Ai::Basic, 10, 0, 8, 120, 1, -99, 99, 1),
         NPC::new('O', "orc", Ai::Basic, 20, 0, 4, 35, 20, -99, 19, 100),
         NPC::new('T', "troll", Ai::Basic, 60, 2, 8, 100, 30, 0, 19, 25),
         NPC::new('M', "minotaur", Ai::Basic, 60, 3, 9, 100, 60, 10, 10, 100),
-        NPC::new('W', "Wraith", Ai::Basic, 100, 3, 9, 100, 100, 17, 19, 100),
+        NPC::new('W', "wraith", Ai::Basic, 100, 3, 9, 100, 100, 17, 19, 100),
         NPC::new('D', "demon", Ai::Basic, 200, 12, 12, 100, 200, 20, 99, 250),
     ];
 }

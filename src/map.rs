@@ -121,8 +121,9 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     let max_npcs = from_map_level(
         &[
             Transition { level: 0, value: 2 },
-            Transition { level: 3, value: 3 },
-            Transition { level: 5, value: 5 },
+            Transition { level: 7, value: 3 },
+            Transition { level: 14, value: 4 },
+            Transition { level: 20, value: 6 },
         ],
         level,
     );
@@ -148,7 +149,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     let max_items = from_map_level(
         &[
             Transition { level: 0, value: 1 },
-            Transition { level: 3, value: 2 },
+            Transition { level: 7, value: 2 },
         ],
         level,
     );

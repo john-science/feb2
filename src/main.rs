@@ -336,7 +336,7 @@ fn reincarnate(game: &mut Game,
     // copy over objects
     let mut player: Object = objects[game.lvl][0].clone();
     reincarnate_reset(&mut player);
-    (player.x, player.y) = game.start_pos;
+    (player.x, player.y) = game.down_stairs[0];
     *objects = start_objects.clone();
     objects[0][PLAYER] = player;
 

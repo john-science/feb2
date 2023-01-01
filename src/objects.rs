@@ -10,7 +10,6 @@ use tcod::colors::*;
 use tcod::console::*;
 
 use crate::constants::NUM_LVLS;
-use crate::constants::PLAYER;
 use crate::map::Map;
 use crate::map::make_map;
 use crate::menus::Messages;
@@ -417,7 +416,6 @@ pub struct Game {
     pub up_stairs: Vec<(i32, i32)>,
     pub down_stairs: Vec<(i32, i32)>,
     pub lvl: usize,
-    pub start_pos: (i32, i32),
     pub messages: Messages,
     pub version: String,
     pub day: u32,
@@ -427,14 +425,11 @@ pub struct Game {
 impl Game {
     pub fn new(objects: &mut Vec<Vec<Object>>) -> Self {
         let (m, up, down) = Game::make_maps(objects);
-        let x: i32 = objects[0][PLAYER].x;
-        let y: i32 = objects[0][PLAYER].y;
         Game {
             maps: m,
             up_stairs: up,
             down_stairs: down,
             lvl: 0,
-            start_pos: (x, y),
             messages: Messages::new(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             day: 1,

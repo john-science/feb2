@@ -55,6 +55,20 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * (You need to drop all items to go up the final staircase.)
 
 
+> Map Design Ideas
+
+* [ ] Different regions of Purgatory should have different maps
+* [ ] The Pit - Cellular Automata - very organic
+* [ ] Well of Souls - ?
+* [ ] The Abyss - ?
+* [ ] Underdark - ?
+* [ ] Labyrinth - Maze, with rooms, many loops
+* [ ] Catacombs - Like Real Catacombs?
+* [ ] Tombs - Very rectangular
+* [ ] Graveyard - The MOST rectagular, BSP
+* [ ] Eternity - Large, open rooms, packed with impossibly dangerous NPCs, many rooms to search blindly
+
+
 > NPC Design Ideas
 
 * [ ] Orcs and Trolls love battle -> +karma

@@ -20,6 +20,7 @@ mod equipment;
 mod loot_table;
 mod magic;
 mod map;
+mod map_algos;
 mod menus;
 mod moves;
 mod npc_table;

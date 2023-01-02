@@ -39,6 +39,19 @@ impl Tile {
 pub type Map = Vec<Vec<Tile>>;
 
 
+// Useful testing function, when designing new map algorithms.
+#[allow(dead_code)]
+pub fn print_map(map: &Map) {
+    map.iter().for_each(|row| {
+        row.iter().for_each(|cell| {
+            if cell.blocked { print!("#"); }
+            else { print!(" "); }
+        });
+        print!("\n");
+    });
+    println!("\n");
+}
+
 pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
     return make_map_simple_fast(all_objects, level);
 }

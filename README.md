@@ -53,6 +53,9 @@ game](https://tomassedovic.github.io/roguelike-tutorial/) using the Python/Rust 
   * Or we `Copy` / `Clone` off the map and objects, for the restart (and only update the player object).
 * [ ] You will need to forgo all material possessions to ascend.
   * (You need to drop all items to go up the final staircase.)
+* [ ] Maps should be bigger than the window!
+  * This means the piece of the map the player can view should shift with the players movement.
+  * Does this mean we will need a "view map" command? And possible a smaller-size tile set?
 
 
 > Map Design Ideas

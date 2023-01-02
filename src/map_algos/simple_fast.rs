@@ -1,5 +1,5 @@
 /*
-  Map and Map-Creation Tools
+  The simplest (and fastest) map-gen algo.
  */
 // Import Std Libs
 use std::cmp;
@@ -11,10 +11,7 @@ use tcod::colors::*;
 // Import Locally
 use crate::constants::MAP_WIDTH;
 use crate::constants::MAP_HEIGHT;
-use crate::constants::MAX_ROOMS;
 use crate::constants::PLAYER;
-use crate::constants::ROOM_MIN_SIZE;
-use crate::constants::ROOM_MAX_SIZE;
 use crate::loot_table::generate_floor_item;
 use crate::map::Map;
 use crate::map::Tile;
@@ -23,6 +20,12 @@ use crate::npc_table::generate_npc;
 use crate::objects::Object;
 use crate::transition::from_map_level;
 use crate::transition::Transition;
+
+
+// parameters for map generator
+pub const ROOM_MAX_SIZE: i32 = 12;
+pub const ROOM_MIN_SIZE: i32 = 6;
+pub const MAX_ROOMS: i32 = 32;
 
 
 // A rectangle on the map, used to characterise a room.

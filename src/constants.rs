@@ -60,11 +60,6 @@ pub const FIREBALL_RADIUS: i32 = 3;
 pub const FIREBALL_DAMAGE: i32 = 25;
 pub const MAX_STACK: i32 = 100;
 
-// parameters for map generator
-pub const ROOM_MAX_SIZE: i32 = 12;
-pub const ROOM_MIN_SIZE: i32 = 6;
-pub const MAX_ROOMS: i32 = 32;
-
 // parameters for game size
 pub const NUM_LVLS: u32 = 21;
 pub const KARMA_TO_ASCEND: i32 = 1000;

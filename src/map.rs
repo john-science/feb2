@@ -1,5 +1,5 @@
 /*
-  Map and Map-Creation Tools
+  Highest-level map tooling
  */
 // Import Third-Party
 use serde::{Deserialize, Serialize};

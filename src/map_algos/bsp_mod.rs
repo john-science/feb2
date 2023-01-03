@@ -85,6 +85,26 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
+fn create_room(part: Rect, map: &mut Map) -> Rect {
+    let part_width: i32 = part.xf - part.x0 + 1;
+    let part_height: i32 = part.yf - part.y0 + 1;
+
+    // random width and height
+    let w = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_width) / 2, part_width + 1);
+    let h = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_height) / 2, part_height + 1);
+    // random position without going out of the boundaries of the map
+    let x: i32 = part.x0 + (part_width - w) / 2;
+    let y: i32 = part.y0 + (part_height - h) / 2;
+
+    let new_room = Rect::new(x, y, x + w, y + h);
+
+    // "paint" it to the map's tiles
+    carve_room(new_room, map);
+
+    return new_room;
+}
+
+
 fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // maximum number of npcs per room
     let max_npcs = from_map_level(
@@ -250,7 +270,7 @@ fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<Rect>
  */
 pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
     // fill map with "unblocked" tiles
-    let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
+    let mut map: Vec<Vec<Tile>> = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
     let mut down_posi: (i32, i32) = (-1, -1);
     let objects = &mut all_objects[level];
 
@@ -261,20 +281,8 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
     let mut rooms: Vec<Rect> = vec![];
 
     for part in parts.iter() {
-        let part_width: i32 = part.xf - part.x0 + 1;
-        let part_height: i32 = part.yf - part.y0 + 1;
-
-        // random width and height
-        let w = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_width) / 2, part_width + 1);
-        let h = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_height) / 2, part_height + 1);
-        // random position without going out of the boundaries of the map
-        let x: i32 = part.x0 + (part_width - w) / 2;
-        let y: i32 = part.y0 + (part_height - h) / 2;
-
-        let new_room = Rect::new(x, y, x + w, y + h);
-
-        // "paint" it to the map's tiles
-        carve_room(new_room, &mut map);
+        // create a room, using complicated, custom logic
+        let new_room = create_room(*part, &mut map);
 
         // center coordinates of the new room, will be useful later
         let (new_x, new_y) = new_room.center();
@@ -315,6 +323,8 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
         // finally, append the new room to the list
         rooms.push(new_room);
     }
+
+    // TODO: create a tunnel between two random, non-adjacent parts
 
     // create up stairs at the center of the last room
     let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();

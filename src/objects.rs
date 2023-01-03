@@ -451,6 +451,13 @@ impl Game {
         let mut down_stairs: Vec<(i32, i32)> = vec![];
         for i in 0..NUM_LVLS {
             let (m, up, down) = make_map(objects, i as usize);
+            /* TESTING
+            use crate::map::print_map;
+            if i < 10 {
+                print_map(&m);
+            }
+            */
+            maps.push(m);
             up_stairs.push(up);
             down_stairs.push(down);
         }

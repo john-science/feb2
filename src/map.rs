@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::objects::Object;
 use crate::map_algos::simple_fast::simple_fast;
 use crate::map_algos::bsp::bsp;
+use crate::map_algos::bsp_mod::bsp_mod;
 
 
 // A tile of the map and its properties
@@ -55,6 +56,8 @@ pub fn print_map(map: &Map) {
 
 pub fn make_map(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
     if level < 10 {
+        return bsp_mod(all_objects, level);
+    } else if level < 16 {
         return bsp(all_objects, level);
     } else {
         return simple_fast(all_objects, level);

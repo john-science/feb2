@@ -1,5 +1,9 @@
 /*
-  Binary Space Partitiion (BSP) map algo
+  Modified Binary Space Partitiion (BSP) map algo
+
+  Modificified:
+  - to randomly skip the split
+  - with custom logic for room shapes
  */
 // Import Std Libs
 use std::cmp;
@@ -23,42 +27,42 @@ use crate::transition::Transition;
 
 
 // parameters for map generator
-pub const ROOM_MIN_SIZE: i32 = 4;
+pub const ROOM_MIN_SIZE: i32 = 5;
 pub const ITERATIONS: i32 = 6;
 
 
 // A rectangle on the map, used to characterise a room.
 #[derive(Clone, Copy, Debug)]
 pub struct Rect {
-    pub x1: i32,
-    pub y1: i32,
-    pub x2: i32,
-    pub y2: i32,
+    pub x0: i32,
+    pub y0: i32,
+    pub xf: i32,
+    pub yf: i32,
 }
 
 impl Rect {
-    pub fn new(x: i32, y: i32, w: i32, h: i32) -> Self {
+    pub fn new(x0: i32, y0: i32, xf: i32, yf: i32) -> Self {
         Rect {
-            x1: x,
-            y1: y,
-            x2: x + w,
-            y2: y + h,
+            x0: x0,
+            y0: y0,
+            xf: xf,
+            yf: yf,
         }
     }
 
     pub fn center(&self) -> (i32, i32) {
         // find the center of the Rect
-        let center_x: i32 = (self.x1 + self.x2) / 2;
-        let center_y: i32 = (self.y1 + self.y2) / 2;
-        (center_x, center_y)
+        let center_x: i32 = (self.x0 + self.xf) / 2;
+        let center_y: i32 = (self.y0 + self.yf) / 2;
+        return (center_x, center_y);
     }
 }
 
 
-fn create_room(room: Rect, map: &mut Map) {
+fn carve_room(room: Rect, map: &mut Map) {
     // go through the tiles in the rectangle and make them passable
-    for x in (room.x1 + 1)..room.x2 {
-        for y in (room.y1 + 1)..room.y2 {
+    for x in (room.x0 + 1)..room.xf {
+        for y in (room.y0 + 1)..room.yf {
             map[x as usize][y as usize] = Tile::empty();
         }
     }
@@ -85,10 +89,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // maximum number of npcs per room
     let max_npcs = from_map_level(
         &[
-            Transition { level: 0, value: 2 },
-            Transition { level: 7, value: 3 },
-            Transition { level: 14, value: 4 },
-            Transition { level: 20, value: 6 },
+            Transition { level: 0, value: 1 },
+            Transition { level: 7, value: 2 },
+            Transition { level: 14, value: 3 },
+            Transition { level: 20, value: 5 },
         ],
         level,
     );
@@ -98,8 +102,8 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
     for _ in 0..num_npcs {
         // choose random spot for this npc
-        let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
-        let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
+        let x = rand::thread_rng().gen_range(room.x0 + 1, room.xf);
+        let y = rand::thread_rng().gen_range(room.y0 + 1, room.yf);
 
         // TODO: Also don't place the NPC if it is in FOV of the player
         // only place it if the tile is not blocked
@@ -125,8 +129,8 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 
     for _ in 0..num_items {
         // choose random spot for this item
-        let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
-        let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
+        let x = rand::thread_rng().gen_range(room.x0 + 1, room.xf);
+        let y = rand::thread_rng().gen_range(room.y0 + 1, room.yf);
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
@@ -147,19 +151,20 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
  *       plus one set of dummies (negatives).
  * NOTE: The corner positions listed are inclusive.
  */
-fn split_single_cell(min_x: i32, min_y: i32, max_x: i32, max_y: i32) -> ((i32, i32, i32, i32), (i32, i32, i32, i32)) {
-    let cell_width: i32 = max_x - min_x;
-    let cell_height: i32 = max_y - min_y;
+fn split_single_cell(cell: Rect) -> (Rect, Rect) {
+    let cell_width: i32 = cell.xf - cell.x0;
+    let cell_height: i32 = cell.yf - cell.y0;
 
     if cell_width <= 2 * ROOM_MIN_SIZE && cell_height <= 2 * ROOM_MIN_SIZE {
         // Case 0: We can't go smaller, return this cell
-        return ((min_x, min_y, max_x, max_y), (-1, -1, -1, -1))
+        return (Rect::new(cell.x0, cell.y0, cell.xf, cell.yf),
+                Rect::new(-1, -1, -1, -1))
     }
 
-    let min_split_x: i32 = min_x + ROOM_MIN_SIZE;
-    let max_split_x: i32 = max_x - ROOM_MIN_SIZE;
-    let min_split_y: i32 = min_y + ROOM_MIN_SIZE;
-    let max_split_y: i32 = max_y - ROOM_MIN_SIZE;
+    let min_split_x: i32 = cell.x0 + ROOM_MIN_SIZE;
+    let max_split_x: i32 = cell.xf - ROOM_MIN_SIZE;
+    let min_split_y: i32 = cell.y0 + ROOM_MIN_SIZE;
+    let max_split_y: i32 = cell.yf - ROOM_MIN_SIZE;
 
     let mut split_vert: bool = true;
     if cell_width <= 2 * ROOM_MIN_SIZE || (cell_height as f32 / cell_width as f32) > 3.0 {
@@ -178,10 +183,12 @@ fn split_single_cell(min_x: i32, min_y: i32, max_x: i32, max_y: i32) -> ((i32, i
     // return the 2 new cells
     if split_vert {
         let x: i32 = rand::thread_rng().gen_range(min_split_x, max_split_x + 1);
-        return ((min_x, min_y, x, max_y), (x + 1, min_y, max_x, max_y))
+        return (Rect::new(cell.x0, cell.y0, x, cell.yf),
+                Rect::new(x + 1, cell.y0, cell.xf, cell.yf))
     } else {
         let y: i32 = rand::thread_rng().gen_range(min_split_y, max_split_y + 1);
-        return ((min_x, min_y, max_x, y), (min_x, y + 1, max_x, max_y))
+        return (Rect::new(cell.x0, cell.y0, cell.xf, y),
+                Rect::new(cell.x0, y + 1, cell.xf, cell.yf))
     }
 }
 
@@ -194,26 +201,31 @@ fn split_single_cell(min_x: i32, min_y: i32, max_x: i32, max_y: i32) -> ((i32, i
  * 3. There are rules for (1) and (2). Minimum size rules.
  * 4. If a space is too small, just don't split it.
  */
-fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<(i32, i32, i32, i32)> {
+fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<Rect> {
     // quick validation
     assert!(width > ROOM_MIN_SIZE);
     assert!(height > ROOM_MIN_SIZE);
     assert!(iterations > 0);
 
     // init the entire space as a cell
-    let mut cells: Vec<(i32, i32, i32, i32)> = vec![];
-    cells.push((0, 0, width, height));
+    let mut cells: Vec<Rect> = vec![];
+    cells.push(Rect::new(0, 0, width, height));
 
-    for _iter in 0..iterations {
-        let mut new_cells: Vec<(i32, i32, i32, i32)> = vec![];
+    for iter in 0..iterations {
+        let mut new_cells: Vec<Rect> = vec![];
 
         // Go through each current cell and try to split it
-        for (min_x, min_y, max_x, max_y) in cells.iter() {
-            let (t1, t2) = split_single_cell(*min_x, *min_y, *max_x, *max_y);
-            new_cells.push(t1);
-            if t2.0 >=0 {
-                // if the second tuple is all -1s, its not real data
-                new_cells.push(t2);
+        for this_cell in cells.iter() {
+            if iter > 1 && rand::thread_rng().gen_range(0, 21) == 0 {
+                // random 1-in-20 chance to NOT split
+                new_cells.push(*this_cell);
+            } else {
+                let (t1, t2) = split_single_cell(*this_cell);
+                new_cells.push(t1);
+                if t2.x0 >=0 {
+                    // if the second tuple is all -1s, its not real data
+                    new_cells.push(t2);
+                }
             }
         }
 
@@ -236,33 +248,33 @@ fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<(i32,
  * Step 3: Add hallways
  * Step 4: Add NPCs/Objects/Stairs into rooms
  */
-pub fn bsp(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
+pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, i32), (i32, i32)) {
     // fill map with "unblocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
     let mut down_posi: (i32, i32) = (-1, -1);
     let objects = &mut all_objects[level];
 
     // Divide the space up using BSP
-    let parts: Vec<(i32, i32, i32, i32)> = binary_space_partition(MAP_WIDTH - 2, MAP_HEIGHT - 2, ITERATIONS);
+    let parts: Vec<Rect> = binary_space_partition(MAP_WIDTH - 2, MAP_HEIGHT - 2, ITERATIONS);
 
     // generate a random set of roooms
     let mut rooms: Vec<Rect> = vec![];
 
-    for (part_x0, part_y0, part_xf, part_yf) in parts.iter() {
-        let part_width: i32 = part_xf - part_x0 + 1;
-        let part_height: i32 = part_yf - part_y0 + 1;
+    for part in parts.iter() {
+        let part_width: i32 = part.xf - part.x0 + 1;
+        let part_height: i32 = part.yf - part.y0 + 1;
 
         // random width and height
         let w = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_width) / 2, part_width + 1);
         let h = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_height) / 2, part_height + 1);
         // random position without going out of the boundaries of the map
-        let x: i32 = part_x0 + (part_width - w) / 2;
-        let y: i32 = part_y0 + (part_height - h) / 2;
+        let x: i32 = part.x0 + (part_width - w) / 2;
+        let y: i32 = part.y0 + (part_height - h) / 2;
 
-        let new_room = Rect::new(x, y, w, h);
+        let new_room = Rect::new(x, y, x + w, y + h);
 
         // "paint" it to the map's tiles
-        create_room(new_room, &mut map);
+        carve_room(new_room, &mut map);
 
         // center coordinates of the new room, will be useful later
         let (new_x, new_y) = new_room.center();

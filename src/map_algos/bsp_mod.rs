@@ -85,6 +85,23 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
+fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
+    let (prev_x, prev_y): (i32, i32) = room0.center();
+    let (new_x, new_y): (i32, i32) = roomf.center();
+
+    // toss a coin (random bool value -- either true or false)
+    if rand::random() {
+        // first move horizontally, then vertically
+        create_h_tunnel(prev_x, new_x, prev_y, map);
+        create_v_tunnel(prev_y, new_y, new_x, map);
+    } else {
+        // first move vertically, then horizontally
+        create_v_tunnel(prev_y, new_y, prev_x, map);
+        create_h_tunnel(prev_x, new_x, new_y, map);
+    }
+}
+
+
 fn create_room(part: Rect, map: &mut Map) -> Rect {
     let part_width: i32 = part.xf - part.x0 + 1;
     let part_height: i32 = part.yf - part.y0 + 1;
@@ -105,7 +122,6 @@ fn create_room(part: Rect, map: &mut Map) -> Rect {
 }
 
 
-// TODO: Transition this to taking the entire Partition
 fn place_objects(part: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // value is chance-in-1000 that an NPC will be in a cell
     let npc_chance: u32 = from_map_level(
@@ -291,19 +307,8 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
             // all rooms after the first:
             // connect it to the previous room with a tunnel
 
-            // center coordinates of the previous room
-            let (prev_x, prev_y): (i32, i32) = rooms[rooms.len() - 1].center();
-
-            // toss a coin (random bool value -- either true or false)
-            if rand::random() {
-                // first move horizontally, then vertically
-                create_h_tunnel(prev_x, new_x, prev_y, &mut map);
-                create_v_tunnel(prev_y, new_y, new_x, &mut map);
-            } else {
-                // first move vertically, then horizontally
-                create_v_tunnel(prev_y, new_y, prev_x, &mut map);
-                create_h_tunnel(prev_x, new_x, new_y, &mut map);
-            }
+            // build a hallway between this room and the last
+            carve_tunnel(rooms[rooms.len() - 1], new_room, &mut map);
 
             // add some content to this room, such as npcs
             place_objects(*part, &map, objects, level as u32);

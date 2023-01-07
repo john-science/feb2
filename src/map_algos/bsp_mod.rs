@@ -28,7 +28,7 @@ use crate::transition::Transition;
 
 // parameters for map generator
 pub const ROOM_MIN_SIZE: i32 = 5;
-pub const ITERATIONS: i32 = 6;
+pub const ITERATIONS: i32 = 5;
 
 
 // A rectangle on the map, used to characterise a room.
@@ -105,59 +105,48 @@ fn create_room(part: Rect, map: &mut Map) -> Rect {
 }
 
 
-fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
-    // maximum number of npcs per room
-    let max_npcs = from_map_level(
+// TODO: Transition this to taking the entire Partition
+fn place_objects(part: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
+    // value is chance-in-1000 that an NPC will be in a cell
+    let npc_chance: u32 = from_map_level(
         &[
-            Transition { level: 0, value: 1 },
-            Transition { level: 7, value: 2 },
-            Transition { level: 14, value: 3 },
-            Transition { level: 20, value: 5 },
+            Transition { level: 0, value: 12 },
+            Transition { level: 20, value: 100 },
         ],
         level,
     );
 
-    // choose random number of npcs
-    let num_npcs = rand::thread_rng().gen_range(0, max_npcs + 1);
-
-    for _ in 0..num_npcs {
-        // choose random spot for this npc
-        let x = rand::thread_rng().gen_range(room.x0 + 1, room.xf);
-        let y = rand::thread_rng().gen_range(room.y0 + 1, room.yf);
-
-        // TODO: Also don't place the NPC if it is in FOV of the player
-        // only place it if the tile is not blocked
-        if !is_blocked(x, y, map, objects) {
-            let mut npc = generate_npc(level as i32);
-            npc.x = x;
-            npc.y = y;
-            objects.push(npc);
-        }
-    }
-
-    // maximum number of items per room
-    let max_items = from_map_level(
+    // value is chance-in-1000 that an item will be in a cell
+    let item_chance: u32 = from_map_level(
         &[
-            Transition { level: 0, value: 1 },
-            Transition { level: 7, value: 2 },
+            Transition { level: 0, value: 12 },
+            Transition { level: 10, value: 32 },
+            Transition { level: 11, value: 12 },
+            Transition { level: 20, value: 64 },
         ],
         level,
     );
 
-    // choose random number of items
-    let num_items = rand::thread_rng().gen_range(0, max_items + 1);
+    // loop through every cell in the partition and roll the dice to place an NPC or an item
+    for x in part.x0..part.xf+1 {
+        for y in part.y0..part.yf+1 {
+            if !is_blocked(x, y, map, objects) {
+                let chance: u32 = rand::thread_rng().gen_range(0, 1000) as u32;
+                if chance < npc_chance {
+                    let mut npc = generate_npc(level as i32);
+                    npc.x = x;
+                    npc.y = y;
+                    objects.push(npc);
+                }
 
-    for _ in 0..num_items {
-        // choose random spot for this item
-        let x = rand::thread_rng().gen_range(room.x0 + 1, room.xf);
-        let y = rand::thread_rng().gen_range(room.y0 + 1, room.yf);
-
-        // only place it if the tile is not blocked
-        if !is_blocked(x, y, map, objects) {
-            let mut item = generate_floor_item(level as i32);
-            item.x = x;
-            item.y = y;
-            objects.push(item);
+                let chance: u32 = rand::thread_rng().gen_range(0, 1000) as u32;
+                if chance < item_chance {
+                    let mut item = generate_floor_item(level as i32);
+                    item.x = x;
+                    item.y = y;
+                    objects.push(item);
+                }
+            }
         }
     }
 }
@@ -166,7 +155,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
 /**
  * Split a single cell into two (if possible).
  * Return corners of two new cells.
- * 
+ *
  * NOTE: If split not possible, return original corners,
  *       plus one set of dummies (negatives).
  * NOTE: The corner positions listed are inclusive.
@@ -215,7 +204,7 @@ fn split_single_cell(cell: Rect) -> (Rect, Rect) {
 
 /**
  * Purely spatial part of the BSP
- * 
+ *
  * 1. Grab the space and divide it in 2. Save off the 2 new spaces
  * 2. Repeat, storing off the smaller spaces, N times.
  * 3. There are rules for (1) and (2). Minimum size rules.
@@ -262,7 +251,7 @@ fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<Rect>
 
 /**
  * Binary Space Partition for Map Generation
- * 
+ *
  * Step 1: Split space into pieces
  * Step 2: Add rooms
  * Step 3: Add hallways
@@ -317,7 +306,7 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
             }
 
             // add some content to this room, such as npcs
-            place_objects(new_room, &map, objects, level as u32);
+            place_objects(*part, &map, objects, level as u32);
         }
 
         // finally, append the new room to the list

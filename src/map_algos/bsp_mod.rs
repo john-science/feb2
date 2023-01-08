@@ -105,12 +105,42 @@ fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
 /* Create one of these room shapes:
 - [X] single, rectangular room
 - [X] two recentangles (one centered, one not but still overlapping)
-- [ ] single oval
+- [X] single ellipse
 - [ ] strange, organic shape
-
-If the room gets too large, we need to add some internal pillars.
 */
 fn create_room(part: Rect, map: &mut Map) {
+    let shape = rand::thread_rng().gen_range(0, 3);
+    if shape == 0 {
+        create_room_ellipse(part, map);
+    } else {
+        create_room_rectangles(part, map);
+    }
+}
+
+
+fn create_room_ellipse(part: Rect, map: &mut Map) {
+    // find the center position of the rectangle/ellipse
+    let mid_x: f32 = (part.xf + part.x0) as f32 / 2.0;
+    let mid_y: f32 = (part.yf + part.y0) as f32 / 2.0;
+
+    // determine the axis of the ellipse
+    let a: f32 = (part.xf - part.x0) as f32 / 2.0 - 0.1;
+    let b: f32 = (part.yf - part.y0) as f32 / 2.0 - 0.1;
+
+    // open up every cell inside the ellipse
+    for x in part.x0..part.xf+1 {
+        for y in part.y0..part.yf+1 {
+            if f32::powf((x as f32 - mid_x) / a, 2.0) + f32::powf((y as f32 - mid_y) / b, 2.0) <= 1.0 {
+                map[x as usize][y as usize] = Tile::empty();
+            }
+        }
+    }
+
+    // TODO: If big enough, add some round pillars
+}
+
+
+fn create_room_rectangles(part: Rect, map: &mut Map) {
     let part_width: i32 = part.xf - part.x0 + 1;
     let part_height: i32 = part.yf - part.y0 + 1;
 
@@ -136,6 +166,8 @@ fn create_room(part: Rect, map: &mut Map) {
         let second_room = Rect::new(part.x0, part.y0, xx, yy);
         carve_room(second_room, map);
     }
+
+    // TODO: If big enough, add some rectangular pillars
 }
 
 

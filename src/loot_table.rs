@@ -105,7 +105,7 @@ fn loot_table() -> Vec<Loot> {
         // scrolls
         Loot::new('~', "scroll of lightning bolt", LIGHT_BLUE, Item::LightningScroll, Slot::Head, 0, 0, 0, 3, 99, 25),
         Loot::new('~', "scroll of fireball", RED, Item::FireballScroll, Slot::Head, 0, 0, 0, 1, 99, 25),
-        Loot::new('~', "scroll of confusion", LIGHT_GREEN, Item::ConfuseScroll, Slot::Head, 0, 0, 0, 0, 99, 10),
+        Loot::new('~', "scroll of confusion", LIGHT_GREEN, Item::ConfuseScroll, Slot::Head, 0, 0, 0, 0, 99, 35),
         // books
         // Loot::new((247 as u8) as char, "book of something", LIGHT_GREEN, Item::ConfuseScroll, Slot::Head, 0, 0, 0, 0, 99, 10),
     ];

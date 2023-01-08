@@ -28,7 +28,7 @@ use crate::transition::Transition;
 
 // parameters for map generator
 pub const ROOM_MIN_SIZE: i32 = 5;
-pub const ITERATIONS: i32 = 5;
+pub const ITERATIONS: i32 = 6;
 
 
 // A rectangle on the map, used to characterise a room.
@@ -102,23 +102,40 @@ fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
 }
 
 
-fn create_room(part: Rect, map: &mut Map) -> Rect {
+/* Create one of these room shapes:
+- [X] single, rectangular room
+- [X] two recentangles (one centered, one not but still overlapping)
+- [ ] single oval
+- [ ] strange, organic shape
+
+If the room gets too large, we need to add some internal pillars.
+*/
+fn create_room(part: Rect, map: &mut Map) {
     let part_width: i32 = part.xf - part.x0 + 1;
     let part_height: i32 = part.yf - part.y0 + 1;
 
-    // random width and height
-    let w = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_width) / 2, part_width + 1);
-    let h = rand::thread_rng().gen_range((ROOM_MIN_SIZE + part_height) / 2, part_height + 1);
+    // Is this room a single rectangle, or two rectangles?
+    let two_rects: bool = rand::random();
+
+    // room width and height
+    let w = rand::thread_rng().gen_range(ROOM_MIN_SIZE, part_width + 1);
+    let h = rand::thread_rng().gen_range(ROOM_MIN_SIZE, part_height + 1);
     // random position without going out of the boundaries of the map
     let x: i32 = part.x0 + (part_width - w) / 2;
     let y: i32 = part.y0 + (part_height - h) / 2;
 
+    // carve out first room
     let new_room = Rect::new(x, y, x + w, y + h);
-
-    // "paint" it to the map's tiles
     carve_room(new_room, map);
 
-    return new_room;
+    // IF we have a second rectangle in the room
+    if two_rects {
+        // overlap in top-left corner, the very least
+        let xx = rand::thread_rng().gen_range(x + 3, part.xf + 1);
+        let yy = rand::thread_rng().gen_range(y + 3, part.yf + 1);
+        let second_room = Rect::new(part.x0, part.y0, xx, yy);
+        carve_room(second_room, map);
+    }
 }
 
 
@@ -126,8 +143,8 @@ fn place_objects(part: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // value is chance-in-1000 that an NPC will be in a cell
     let npc_chance: u32 = from_map_level(
         &[
-            Transition { level: 0, value: 12 },
-            Transition { level: 20, value: 100 },
+            Transition { level: 0, value: 10 },
+            Transition { level: 20, value: 64 },
         ],
         level,
     );
@@ -135,9 +152,9 @@ fn place_objects(part: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
     // value is chance-in-1000 that an item will be in a cell
     let item_chance: u32 = from_map_level(
         &[
-            Transition { level: 0, value: 12 },
+            Transition { level: 0, value: 10 },
             Transition { level: 10, value: 32 },
-            Transition { level: 11, value: 12 },
+            Transition { level: 11, value: 10 },
             Transition { level: 20, value: 64 },
         ],
         level,
@@ -149,6 +166,7 @@ fn place_objects(part: Rect, map: &Map, objects: &mut Vec<Object>, level: u32) {
             if !is_blocked(x, y, map, objects) {
                 let chance: u32 = rand::thread_rng().gen_range(0, 1000) as u32;
                 if chance < npc_chance {
+                    // TODO: Perhaps we should not spawn NPCs in FOV of the upstairs.
                     let mut npc = generate_npc(level as i32);
                     npc.x = x;
                     npc.y = y;
@@ -282,17 +300,14 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
     // Divide the space up using BSP
     let parts: Vec<Rect> = binary_space_partition(MAP_WIDTH - 2, MAP_HEIGHT - 2, ITERATIONS);
 
-    // generate a random set of roooms
-    let mut rooms: Vec<Rect> = vec![];
-
-    for part in parts.iter() {
+    for (i, part) in parts.iter().enumerate() {
         // create a room, using complicated, custom logic
-        let new_room = create_room(*part, &mut map);
+        create_room(*part, &mut map);
 
         // center coordinates of the new room, will be useful later
-        let (new_x, new_y) = new_room.center();
+        let (new_x, new_y) = part.center();
 
-        if rooms.is_empty() {
+        if i == 0 {
             down_posi = (new_x, new_y);
             if level == 0 {
                 // this is the first room, where the player starts at
@@ -304,27 +319,31 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
                 objects.push(down_stairs);
             }
         } else {
-            // all rooms after the first:
-            // connect it to the previous room with a tunnel
-
             // build a hallway between this room and the last
-            carve_tunnel(rooms[rooms.len() - 1], new_room, &mut map);
+            carve_tunnel(parts[i-1], *part, &mut map);
 
             // add some content to this room, such as npcs
             place_objects(*part, &map, objects, level as u32);
         }
-
-        // finally, append the new room to the list
-        rooms.push(new_room);
     }
 
-    // TODO: create a tunnel between two random, non-adjacent parts
+    // create a tunnel between two random, non-adjacent parts
+    let num_rooms: i32 = parts.len() as i32;
+    if num_rooms > 6 {
+        let start: usize = rand::thread_rng().gen_range(0, num_rooms / 3) as usize;
+        let end: usize = rand::thread_rng().gen_range(2 * num_rooms / 3, num_rooms) as usize;
+        carve_tunnel(parts[start], parts[end], &mut map);
+    }
 
     // create up stairs at the center of the last room
-    let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
+    let (last_room_x, last_room_y) = parts[num_rooms as usize - 1].center();
     let mut up_stairs = Object::new(last_room_x, last_room_y, '>', "up-stairs", WHITE, false);
     up_stairs.always_visible = true;
     objects.push(up_stairs);
+
+    // TODO: TESTING
+    use crate::map::print_map;
+    print_map(&map);
 
     return (map, (last_room_x, last_room_y), down_posi);
 }

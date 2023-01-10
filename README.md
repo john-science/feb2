@@ -99,6 +99,7 @@ my go-to projects for new languages. As such, the first resources I used were fo
 * [Official Rust Book](https://doc.rust-lang.org/book/title-page.html)
 * [Roguelite tutorial with tcod-rs](https://tomassedovic.github.io/roguelike-tutorial/)
 * [libtcod library](https://github.com/libtcod/libtcod)
+* [Amethyst's Rust Roguelike Tutorial](https://github.com/amethyst/rustrogueliketutorial)
 
 
 ### Other Great Roguelike Dev Resources

@@ -85,11 +85,12 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
+// TODO: Can make things ugly. Not very clever.
 fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
     let (prev_x, prev_y): (i32, i32) = room0.center();
     let (new_x, new_y): (i32, i32) = roomf.center();
 
-    // toss a coin (random bool value -- either true or false)
+    // flip a coin
     if rand::random() {
         // first move horizontally, then vertically
         create_h_tunnel(prev_x, new_x, prev_y, map);
@@ -103,10 +104,9 @@ fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
 
 
 /* Create one of these room shapes:
-- [X] single, rectangular room
-- [X] two recentangles (one centered, one not but still overlapping)
-- [X] single ellipse
-- [ ] strange, organic shape
+- single, rectangular room
+- two recentangles (one centered, one not but still overlapping)
+- single ellipse
 */
 fn create_room(part: Rect, map: &mut Map) {
     let shape = rand::thread_rng().gen_range(0, 3);
@@ -137,6 +137,14 @@ fn create_room_ellipse(part: Rect, map: &mut Map) {
     }
 
     // TODO: If big enough, add some round pillars
+    if a > 4.0 && b > 4.0 {
+        let (center_x, center_y) = part.center();
+        for x in center_x-1..center_x+2 {
+            for y in center_y-1..center_y+2 {
+                map[x as usize][y as usize] = Tile::wall();
+            }
+        }
+    }
 }
 
 
@@ -286,21 +294,16 @@ fn binary_space_partition(width: i32, height: i32, iterations: i32) -> Vec<Rect>
     let mut cells: Vec<Rect> = vec![];
     cells.push(Rect::new(0, 0, width, height));
 
-    for iter in 0..iterations {
+    for _iter in 0..iterations {
         let mut new_cells: Vec<Rect> = vec![];
 
         // Go through each current cell and try to split it
         for this_cell in cells.iter() {
-            if iter > 1 && rand::thread_rng().gen_range(0, 21) == 0 {
-                // random 1-in-20 chance to NOT split
-                new_cells.push(*this_cell);
-            } else {
-                let (t1, t2) = split_single_cell(*this_cell);
-                new_cells.push(t1);
-                if t2.x0 >=0 {
-                    // if the second tuple is all -1s, its not real data
-                    new_cells.push(t2);
-                }
+            let (t1, t2) = split_single_cell(*this_cell);
+            new_cells.push(t1);
+            if t2.x0 >=0 {
+                // if the second tuple is all -1s, its not real data
+                new_cells.push(t2);
             }
         }
 
@@ -333,6 +336,13 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
     let parts: Vec<Rect> = binary_space_partition(MAP_WIDTH - 2, MAP_HEIGHT - 2, ITERATIONS);
 
     for (i, part) in parts.iter().enumerate() {
+        if i > 0 {
+            // build a hallway between this room and the last
+            carve_tunnel(parts[i-1], *part, &mut map);
+        }
+    }
+
+    for (i, part) in parts.iter().enumerate() {
         // create a room, using complicated, custom logic
         create_room(*part, &mut map);
 
@@ -351,9 +361,6 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
                 objects.push(down_stairs);
             }
         } else {
-            // build a hallway between this room and the last
-            carve_tunnel(parts[i-1], *part, &mut map);
-
             // add some content to this room, such as npcs
             place_objects(*part, &map, objects, level as u32);
         }

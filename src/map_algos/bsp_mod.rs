@@ -335,6 +335,7 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
     // Divide the space up using BSP
     let parts: Vec<Rect> = binary_space_partition(MAP_WIDTH - 2, MAP_HEIGHT - 2, ITERATIONS);
 
+    // build hallways between center of (future) rooms
     for (i, part) in parts.iter().enumerate() {
         if i > 0 {
             // build a hallway between this room and the last
@@ -342,6 +343,15 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
         }
     }
 
+    // create a tunnel between two random, non-adjacent parts                                                                                                                                                      
+    let num_rooms: i32 = parts.len() as i32;                                                                                                                                                                       
+    if num_rooms > 6 {                                                                                                                                                                                             
+        let start: usize = rand::thread_rng().gen_range(1, num_rooms / 3) as usize;                                                                                                                                
+        let end: usize = rand::thread_rng().gen_range(2 * num_rooms / 3, num_rooms) as usize;                                                                                                                      
+        carve_tunnel(parts[start], parts[end], &mut map);                                                                                                                                                          
+    }
+
+    // build rooms and place objects
     for (i, part) in parts.iter().enumerate() {
         // create a room, using complicated, custom logic
         create_room(*part, &mut map);
@@ -364,14 +374,6 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
             // add some content to this room, such as npcs
             place_objects(*part, &map, objects, level as u32);
         }
-    }
-
-    // create a tunnel between two random, non-adjacent parts
-    let num_rooms: i32 = parts.len() as i32;
-    if num_rooms > 6 {
-        let start: usize = rand::thread_rng().gen_range(0, num_rooms / 3) as usize;
-        let end: usize = rand::thread_rng().gen_range(2 * num_rooms / 3, num_rooms) as usize;
-        carve_tunnel(parts[start], parts[end], &mut map);
     }
 
     // create up stairs at the center of the last room

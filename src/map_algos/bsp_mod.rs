@@ -138,10 +138,16 @@ fn create_room_ellipse(part: Rect, map: &mut Map) {
 
     // TODO: If big enough, add some round pillars
     if a > 4.0 && b > 4.0 {
-        let (center_x, center_y) = part.center();
-        for x in center_x-1..center_x+2 {
-            for y in center_y-1..center_y+2 {
-                map[x as usize][y as usize] = Tile::wall();
+        let mut rng = rand::thread_rng();
+        let aa: f32 = rng.gen::<f32>() * (a / 2.0);
+        let bb: f32 = rng.gen::<f32>() * (b / 2.0);
+
+        // open up every cell inside the ellipse
+        for x in part.x0..part.xf+1 {
+            for y in part.y0..part.yf+1 {
+                if f32::powf((x as f32 - mid_x) / aa, 2.0) + f32::powf((y as f32 - mid_y) / bb, 2.0) <= 1.0 {
+                    map[x as usize][y as usize] = Tile::wall();
+                }
             }
         }
     }
@@ -175,7 +181,25 @@ fn create_room_rectangles(part: Rect, map: &mut Map) {
         carve_room(second_room, map);
     }
 
-    // TODO: If big enough, add some rectangular pillars
+    // TODO: If big enough, add some rectangular pillars (central, or grid-like)
+    if w > 7 && h > 7 {
+        if rand::random() {
+            map[(x + w/4) as usize][(y + h/4) as usize] = Tile::wall();
+            map[(x + w/4) as usize][(y + 3*h/4) as usize] = Tile::wall();
+            map[(x + 3*w/4) as usize][(y + h/4) as usize] = Tile::wall();
+            map[(x + 3*w/4) as usize][(y + 3*h/4) as usize] = Tile::wall();
+        } else {
+            let ww = rand::thread_rng().gen_range(1, w - 4);
+            let hh = rand::thread_rng().gen_range(1, h - 4);
+            let xxx: i32 = x + (w - ww) / 2;
+            let yyy: i32 = y + (h - hh) / 2;
+            for i in xxx..(xxx + ww + 1) {
+                for j in yyy..(yyy + hh + 1) {
+                    map[i as usize][j as usize] = Tile::wall();
+                }
+            }
+        }
+    }
 }
 
 
@@ -343,12 +367,12 @@ pub fn bsp_mod(all_objects: &mut Vec<Vec<Object>>, level: usize) -> (Map, (i32, 
         }
     }
 
-    // create a tunnel between two random, non-adjacent parts                                                                                                                                                      
-    let num_rooms: i32 = parts.len() as i32;                                                                                                                                                                       
-    if num_rooms > 6 {                                                                                                                                                                                             
-        let start: usize = rand::thread_rng().gen_range(1, num_rooms / 3) as usize;                                                                                                                                
-        let end: usize = rand::thread_rng().gen_range(2 * num_rooms / 3, num_rooms) as usize;                                                                                                                      
-        carve_tunnel(parts[start], parts[end], &mut map);                                                                                                                                                          
+    // create a tunnel between two random, non-adjacent parts
+    let num_rooms: i32 = parts.len() as i32;
+    if num_rooms > 6 {
+        let start: usize = rand::thread_rng().gen_range(1, num_rooms / 3) as usize;
+        let end: usize = rand::thread_rng().gen_range(2 * num_rooms / 3, num_rooms) as usize;
+        carve_tunnel(parts[start], parts[end], &mut map);
     }
 
     // build rooms and place objects

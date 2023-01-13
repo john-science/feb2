@@ -85,7 +85,7 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
 }
 
 
-// TODO: Can make things ugly. Not very clever.
+// NOTE: Very simplistic
 fn carve_tunnel(room0: Rect, roomf: Rect, map: &mut Map) {
     let (prev_x, prev_y): (i32, i32) = room0.center();
     let (new_x, new_y): (i32, i32) = roomf.center();
@@ -136,7 +136,7 @@ fn create_room_ellipse(part: Rect, map: &mut Map) {
         }
     }
 
-    // TODO: If big enough, add some round pillars
+    // If big enough, add some elliptical pillars
     if a > 4.0 && b > 4.0 {
         let mut rng = rand::thread_rng();
         let aa: f32 = rng.gen::<f32>() * (a / 2.0);
@@ -181,14 +181,16 @@ fn create_room_rectangles(part: Rect, map: &mut Map) {
         carve_room(second_room, map);
     }
 
-    // TODO: If big enough, add some rectangular pillars (central, or grid-like)
+    // If big enough, add some rectangular pillars
     if w > 7 && h > 7 {
         if rand::random() {
+            // four pillars in the corners
             map[(x + w/4) as usize][(y + h/4) as usize] = Tile::wall();
             map[(x + w/4) as usize][(y + 3*h/4) as usize] = Tile::wall();
             map[(x + 3*w/4) as usize][(y + h/4) as usize] = Tile::wall();
             map[(x + 3*w/4) as usize][(y + 3*h/4) as usize] = Tile::wall();
         } else {
+            // central pillar (room might look like a square hallway)
             let ww = rand::thread_rng().gen_range(1, w - 4);
             let hh = rand::thread_rng().gen_range(1, h - 4);
             let xxx: i32 = x + (w - ww) / 2;

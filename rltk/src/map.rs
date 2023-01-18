@@ -1,147 +1,145 @@
+use rltk::{ RGB, Rltk, RandomNumberGenerator, BaseMap, Algorithm2D, Point };
+use super::{Player, Rect, Viewshed};
 use std::cmp::{max, min};
-
-use rltk::{ RGB, Rltk };
-
-use crate::rect::Rect;
-
+use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
     Wall, Floor
 }
 
-/// Helper function to get the 1D coordinate from a faux 2D vector
-pub fn xy_idx(x: i32, y: i32) -> usize {
-    (y as usize * 80) + x as usize
+pub struct Map {
+    pub tiles : Vec<TileType>,
+    pub rooms : Vec<Rect>,
+    pub width : i32,
+    pub height : i32
 }
 
-
-// TODO: magic numbers. 40/25? Not beautiful.
-#[allow(dead_code)]
-pub fn new_map_test() -> Vec<TileType> {
-    let mut map = vec![TileType::Floor; 80*50];
-
-    // Make the boundaries walls
-    for x in 0..80 {
-        map[xy_idx(x, 0)] = TileType::Wall;
-        map[xy_idx(x, 49)] = TileType::Wall;
-    }
-    for y in 0..50 {
-        map[xy_idx(0, y)] = TileType::Wall;
-        map[xy_idx(79, y)] = TileType::Wall;
+impl Map {
+    pub fn xy_idx(&self, x: i32, y: i32) -> usize {
+        (y as usize * self.width as usize) + x as usize
     }
 
-    // Now we'll randomly splat a bunch of walls. It won't be pretty, but it's a decent illustration.
-    // First, obtain the thread-local RNG:
-    let mut rng = rltk::RandomNumberGenerator::new();
-
-    for _i in 0..400 {
-        let x = rng.roll_dice(1, 79);
-        let y = rng.roll_dice(1, 49);
-        let idx = xy_idx(x, y);
-        if idx != xy_idx(40, 25) {  // TODO: The middle
-            map[idx] = TileType::Wall;
+    fn apply_room_to_map(&mut self, room : &Rect) {
+        for y in room.y1 +1 ..= room.y2 {
+            for x in room.x1 + 1 ..= room.x2 {
+                let idx = self.xy_idx(x, y);
+                self.tiles[idx] = TileType::Floor;
+            }
         }
     }
 
-    map
+    fn apply_horizontal_tunnel(&mut self, x1:i32, x2:i32, y:i32) {
+        for x in min(x1,x2) ..= max(x1,x2) {
+            let idx = self.xy_idx(x, y);
+            if idx > 0 && idx < self.width as usize * self.height as usize {
+                self.tiles[idx as usize] = TileType::Floor;
+            }
+        }
+    }
+
+    fn apply_vertical_tunnel(&mut self, y1:i32, y2:i32, x:i32) {
+        for y in min(y1,y2) ..= max(y1,y2) {
+            let idx = self.xy_idx(x, y);
+            if idx > 0 && idx < self.width as usize * self.height as usize {
+                self.tiles[idx as usize] = TileType::Floor;
+            }
+        }
+    }
+
+    /// Makes a new map using the algorithm from http://rogueliketutorials.com/tutorials/tcod/part-3/
+    /// This gives a handful of random rooms and corridors joining them together.
+    pub fn new_map_rooms_and_corridors() -> Map {
+        let mut map = Map{
+            tiles : vec![TileType::Wall; 80*50],
+            rooms : Vec::new(),
+            width : 80,
+            height: 50
+        };
+
+        const MAX_ROOMS : i32 = 30;
+        const MIN_SIZE : i32 = 6;
+        const MAX_SIZE : i32 = 10;
+
+        let mut rng = RandomNumberGenerator::new();
+
+        for i in 0..MAX_ROOMS {
+            let w = rng.range(MIN_SIZE, MAX_SIZE);
+            let h = rng.range(MIN_SIZE, MAX_SIZE);
+            let x = rng.roll_dice(1, map.width - w - 1) - 1;
+            let y = rng.roll_dice(1, map.height - h - 1) - 1;
+            let new_room = Rect::new(x, y, w, h);
+            let mut ok = true;
+            for other_room in map.rooms.iter() {
+                if new_room.intersect(other_room) { ok = false }
+            }
+            if ok {
+                map.apply_room_to_map(&new_room);
+
+                if !map.rooms.is_empty() {
+                    let (new_x, new_y) = new_room.center();
+                    let (prev_x, prev_y) = map.rooms[map.rooms.len()-1].center();
+                    if rng.range(0,2) == 1 {
+                        map.apply_horizontal_tunnel(prev_x, new_x, prev_y);
+                        map.apply_vertical_tunnel(prev_y, new_y, new_x);
+                    } else {
+                        map.apply_vertical_tunnel(prev_y, new_y, prev_x);
+                        map.apply_horizontal_tunnel(prev_x, new_x, new_y);
+                    }
+                }
+
+                map.rooms.push(new_room);
+            }
+        }
+
+        map
+    }
 }
 
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
 
-/// Dig a rectangular room out of the map
-pub fn apply_room_to_map(room : &Rect, map: &mut [TileType]) {
-    for y in room.y1 +1 ..= room.y2 {
-        for x in room.x1 + 1 ..= room.x2 {
-            map[xy_idx(x, y)] = TileType::Floor;
-        }
+impl BaseMap for Map {
+    fn is_opaque(&self, idx:usize) -> bool {
+        self.tiles[idx as usize] == TileType::Wall
     }
 }
 
 
+// TODO: Colors should be const
+/// Not the best version
+pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
+    let mut viewsheds = ecs.write_storage::<Viewshed>();
+    let mut players = ecs.write_storage::<Player>();
+    let map = ecs.fetch::<Map>();
 
-fn apply_horizontal_tunnel(map: &mut [TileType], x1:i32, x2:i32, y:i32) {
-    for x in min(x1,x2) ..= max(x1,x2) {
-        let idx = xy_idx(x, y);
-        if idx > 0 && idx < 80*50 {
-            map[idx as usize] = TileType::Floor;
-        }
-    }
-}
-
-fn apply_vertical_tunnel(map: &mut [TileType], y1:i32, y2:i32, x:i32) {
-    for y in min(y1,y2) ..= max(y1,y2) {
-        let idx = xy_idx(x, y);
-        if idx > 0 && idx < 80*50 {  // TODO: const
-            map[idx as usize] = TileType::Floor;
-        }
-    }
-}
-
-
-pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
-    let mut map = vec![TileType::Wall; 80*50];
-
-    let mut rooms : Vec<Rect> = Vec::new();
-    const MAX_ROOMS : i32 = 30;
-    const MIN_SIZE : i32 = 6;
-    const MAX_SIZE : i32 = 10;
-
-    let mut rng = rltk::RandomNumberGenerator::new();
-
-    for _ in 0..MAX_ROOMS {
-        let w = rng.range(MIN_SIZE, MAX_SIZE);
-        let h = rng.range(MIN_SIZE, MAX_SIZE);
-        let x = rng.roll_dice(1, 80 - w - 1) - 1;
-        let y = rng.roll_dice(1, 50 - h - 1) - 1;
-        let new_room = Rect::new(x, y, w, h);
-        let mut ok = true;
-        for other_room in rooms.iter() {
-            if new_room.intersect(other_room) { ok = false }
-        }
-        if ok {
-            apply_room_to_map(&new_room, &mut map);
-
-            if !rooms.is_empty() {
-                let (new_x, new_y) = new_room.center();
-                let (prev_x, prev_y) = rooms[rooms.len()-1].center();
-                if rng.range(0, 2) == 1 {
-                    apply_horizontal_tunnel(&mut map, prev_x, new_x, prev_y);
-                    apply_vertical_tunnel(&mut map, prev_y, new_y, new_x);
-                } else {
-                    apply_vertical_tunnel(&mut map, prev_y, new_y, prev_x);
-                    apply_horizontal_tunnel(&mut map, prev_x, new_x, new_y);
+    for (_player, viewshed) in (&mut players, &mut viewsheds).join() {
+        let mut y = 0;
+        let mut x = 0;
+        for tile in map.tiles.iter() {
+            // Render a tile depending upon the tile type
+            let pt = Point::new(x,y);
+            if viewshed.visible_tiles.contains(&pt) {
+                match tile {
+                    TileType::Floor => {
+                        ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
+                    }
+                    TileType::Wall => {
+                        ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
+                    }
                 }
             }
 
-            rooms.push(new_room);
-        }
-    }
-
-    (rooms, map)
-}
-
-
-// NOTE: This syntax means we can pass in a slice of the map for maps bigger than the screen.
-pub fn draw_map(map: &[TileType], ctx : &mut Rltk) {
-    let mut y = 0;
-    let mut x = 0;
-    for tile in map.iter() {
-        // Render a tile depending upon the tile type
-        match tile {
-            TileType::Floor => {
-                // TODO: I prefer ' '  to '.'
-                ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
+            // Move the coordinates
+            x += 1;
+            if x > 79 {
+                x = 0;
+                y += 1;
             }
-            TileType::Wall => {
-                ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
-            }
-        }
-
-        // Move the coordinates
-        x += 1;
-        if x > 79 {
-            x = 0;
-            y += 1;
         }
     }
 }
+

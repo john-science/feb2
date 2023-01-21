@@ -23,27 +23,23 @@ So, in the interests of exploring Rust, and these tools, I will build a little R
 libraries and see which one I like best.
 
 
-## Resources
+## Educational Resources
 
-
-### Resources I Definitely Used
-
-This project will start out as an exercise in learning Rust by making another Roguelite. Which is one of
-my go-to projects for new languages. As such, the first resources I used were for Rust and `tcod-rs`.
+### Learning Rust
 
 * [Offficial Rust Learning](https://www.rust-lang.org/learn/)
 * [Official Rust Book](https://doc.rust-lang.org/book/title-page.html)
-* [Roguelite tutorial with tcod-rs](https://tomassedovic.github.io/roguelike-tutorial/)
-* [libtcod library](https://github.com/libtcod/libtcod)
-* [Amethyst's Rust Roguelike Tutorial](https://github.com/amethyst/rustrogueliketutorial) - [book](https://bfnightly.bracketproductions.com/chapter_0.html)
+* [Rustlings](https://github.com/rust-lang/rustlings)
+* [Code to the Moon's YouTube videos](https://www.youtube.com/watch?v=EqV5wKD233c&list=PL2q9pua8FpiUiCv6KmWWhR5Bh8GfElo98)
 
 
-### Other Great Roguelike Dev Resources
+### Roguelike Dev
 
+* [Amethyst's Rust Roguelike Tutorial](https://github.com/amethyst/rustrogueliketutorial) - [GREAT Book](https://bfnightly.bracketproductions.com/chapter_0.html)
 * [Roguelike Dev Resources!](https://github.com/marukrap/RoguelikeDevResources)
 * [Procedural Content Gen Wiki](http://pcg.wikidot.com/category-pcg-algorithms)
 * [Wave Function Collapse / Constraint Optimization](https://bfnightly.bracketproductions.com/chapter_33.html)
 * [Brogue Level Gen](https://www.rockpapershotgun.com/how-do-roguelikes-generate-levels)
-* [Dungeon Generation - Binding of Isaac](https://www.boristhebrave.com/2020/09/12/dungeon-generation-in-binding-of-isaac/)
 * [How Gungeon Makes Every Run Unique](https://www.cbr.com/enter-the-gungeon-variety-indie-roguelike/)
+* [Dungeon Generation - Binding of Isaac](https://www.boristhebrave.com/2020/09/12/dungeon-generation-in-binding-of-isaac/)
 

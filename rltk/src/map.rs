@@ -2,6 +2,8 @@ use rltk::{ RGB, Rltk, RandomNumberGenerator, BaseMap, Algorithm2D, Point };
 use super::{Player, Rect, Viewshed};
 use std::cmp::{max, min};
 use specs::prelude::*;
+use crate::components::*;
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {

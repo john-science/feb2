@@ -12,7 +12,8 @@ pub struct Map {
     pub tiles : Vec<TileType>,
     pub rooms : Vec<Rect>,
     pub width : i32,
-    pub height : i32
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>
 }
 
 impl Map {
@@ -54,7 +55,8 @@ impl Map {
             tiles : vec![TileType::Wall; 80*50],
             rooms : Vec::new(),
             width : 80,
-            height: 50
+            height: 50,  // TODO: Magic numbers
+            revealed_tiles : vec![false; 80*50]
         };
 
         const MAX_ROOMS : i32 = 30;
@@ -112,33 +114,28 @@ impl BaseMap for Map {
 // TODO: Colors should be const
 /// Not the best version
 pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
-    let mut viewsheds = ecs.write_storage::<Viewshed>();
-    let mut players = ecs.write_storage::<Player>();
     let map = ecs.fetch::<Map>();
 
-    for (_player, viewshed) in (&mut players, &mut viewsheds).join() {
-        let mut y = 0;
-        let mut x = 0;
-        for tile in map.tiles.iter() {
-            // Render a tile depending upon the tile type
-            let pt = Point::new(x,y);
-            if viewshed.visible_tiles.contains(&pt) {
-                match tile {
-                    TileType::Floor => {
-                        ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
-                    }
-                    TileType::Wall => {
-                        ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
-                    }
+    let mut y = 0;
+    let mut x = 0;
+    for (idx,tile) in map.tiles.iter().enumerate() {
+        // Render a tile depending upon the tile type
+        if map.revealed_tiles[idx] {
+            match tile {
+                TileType::Floor => {
+                    ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
+                }
+                TileType::Wall => {
+                    ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
                 }
             }
+        }
 
-            // Move the coordinates
-            x += 1;
-            if x > 79 {
-                x = 0;
-                y += 1;
-            }
+        // Move the coordinates
+        x += 1;
+        if x > 79 {
+            x = 0;
+            y += 1;
         }
     }
 }

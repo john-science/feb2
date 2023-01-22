@@ -72,7 +72,7 @@ fn main() -> rltk::BError {
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player{})
-        .with(Viewshed{ visible_tiles : Vec::new(), range : 8 })  // TODO: 8 is a magic number
+        .with(Viewshed{ visible_tiles : Vec::new(), range : 8, dirty: true })  // TODO: 8 is a magic number
         .build();
 
     rltk::main_loop(context, gs)

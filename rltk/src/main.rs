@@ -1,4 +1,4 @@
-use rltk::{GameState, Rltk, RGB, RltkBuilder};
+use rltk::{GameState, Point, Rltk, RGB, RltkBuilder};
 use specs::prelude::*;
 
 mod components;
@@ -76,6 +76,7 @@ fn main() -> rltk::BError {
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
+    gs.ecs.insert(Point::new(player_x, player_y));
 
     // putting in some placeholder NPCs
     let mut rng = rltk::RandomNumberGenerator::new();

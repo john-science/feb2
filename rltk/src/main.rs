@@ -2,16 +2,20 @@ use rltk::{GameState, Point, Rltk, RGB, RltkBuilder};
 use specs::prelude::*;
 
 mod components;
+mod damage_system;
 mod map;
 mod map_indexing_system;
+mod melee_combat_system;
 mod monster_ai_system;
 mod player;
 mod rect;
 mod visibility_system;
 
 pub use components::*;
+pub use damage_system::*;
 pub use map::*;
 pub use map_indexing_system::*;
+pub use melee_combat_system::MeleeCombatSystem;
 pub use monster_ai_system::MonsterAI;
 use player::*;
 pub use rect::Rect;
@@ -34,6 +38,10 @@ impl State {
         mob.run_now(&self.ecs);
         let mut mapindex = MapIndexingSystem{};
         mapindex.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -49,6 +57,7 @@ impl GameState for State {
             self.runstate = player_input(self, ctx);
         }
 
+        damage_system::delete_the_dead(&mut self.ecs);
         draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
@@ -72,13 +81,16 @@ fn main() -> rltk::BError {
         ecs: World::new(),
         runstate : RunState::Running
     };
+    gs.ecs.register::<BlocksTile>();
+    gs.ecs.register::<CombatStats>();
     gs.ecs.register::<Monster>();
     gs.ecs.register::<Name>();
     gs.ecs.register::<Player>();  // TODO: Is it possible in ECS to say there can be only one of these?
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
+    gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<Viewshed>();
-    gs.ecs.register::<BlocksTile>();
+    gs.ecs.register::<WantsToMelee>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -108,6 +120,7 @@ fn main() -> rltk::BError {
             .with(Monster{})
             .with(Name{ name: format!("{} #{}", &name, i) })
             .with(BlocksTile{})
+            .with(CombatStats{ max_hp: 16, hp: 16, defense: 1, power: 4 })
             .build();
     }
 
@@ -123,7 +136,8 @@ fn main() -> rltk::BError {
         })
         .with(Player{})
         .with(Name{ name: "Player".to_string() })
-        .with(Viewshed{ visible_tiles : Vec::new(), range : 8, dirty: true })  // TODO: 8 is a magic number
+        .with(Viewshed{ visible_tiles : Vec::new(), range : 8, dirty: true })  // TODO: 8 is a magic num
+        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
         .build();
 
     rltk::main_loop(context, gs)

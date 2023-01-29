@@ -17,7 +17,8 @@ pub struct Map {
     pub height : i32,
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
-    pub blocked : Vec<bool>
+    pub blocked : Vec<bool>,
+    pub tile_content : Vec<Vec<Entity>>
 }
 
 impl Map {
@@ -58,6 +59,11 @@ impl Map {
         }
     }
 
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
 
     fn is_exit_valid(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
@@ -75,7 +81,8 @@ impl Map {
             height: 50,  // TODO: Magic numbers
             revealed_tiles : vec![false; 80*50],
             visible_tiles : vec![false; 80*50],
-            blocked : vec![false; 80*50]
+            blocked : vec![false; 80*50],
+            tile_content : vec![Vec::new(); 80*50]
         };
 
         const MAX_ROOMS : i32 = 30;

@@ -3,6 +3,7 @@ use specs::prelude::*;
 
 mod components;
 mod damage_system;
+mod gui;
 mod map;
 mod map_indexing_system;
 mod melee_combat_system;
@@ -13,6 +14,7 @@ mod visibility_system;
 
 pub use components::*;
 pub use damage_system::*;
+pub use gui::*;
 pub use map::*;
 pub use map_indexing_system::*;
 pub use melee_combat_system::MeleeCombatSystem;
@@ -88,6 +90,9 @@ impl GameState for State {
             let idx = map.xy_idx(pos.x, pos.y);
             if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
         }
+
+        // draw the UI panel
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 

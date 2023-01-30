@@ -1,4 +1,4 @@
-use rltk::{ RGB, Rltk, Console };
+use rltk::{ RGB, Rltk };
 use specs::prelude::*;
 use super::{CombatStats, GameLog, Map, Name, Player, Point, Position};
 

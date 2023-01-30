@@ -1,8 +1,7 @@
 use rltk::{ RGB, Rltk, RandomNumberGenerator, BaseMap, Algorithm2D, Point };
-use super::{Player, Rect, Viewshed};
+use super::Rect;
 use std::cmp::{max, min};
 use specs::prelude::*;
-use crate::components::*;
 
 pub const MAPWIDTH : usize = 80;
 pub const MAPHEIGHT : usize = 43;
@@ -94,7 +93,7 @@ impl Map {
 
         let mut rng = RandomNumberGenerator::new();
 
-        for i in 0..MAX_ROOMS {
+        for _i in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);
             let h = rng.range(MIN_SIZE, MAX_SIZE);
             let x = rng.roll_dice(1, map.width - w - 1) - 1;

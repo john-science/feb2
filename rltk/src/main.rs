@@ -100,9 +100,10 @@ impl GameState for State {
 
 
 fn main() -> rltk::BError {
-    let context = RltkBuilder::simple80x50()
+    let mut context = RltkBuilder::simple80x50()
         .with_title("February Second")
         .build()?;
+    // TODO: old school flair: context.with_post_scanlines(true);
 
     let mut gs = State{
         ecs: World::new()

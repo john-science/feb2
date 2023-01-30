@@ -1,14 +1,28 @@
 use rltk::{ RGB, Rltk, Console };
 use specs::prelude::*;
-use super::{ MAPWIDTH, MAPHEIGHT };
+use super::{CombatStats, GameLog, Player};
 
+// TODO: magic numbers
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
-    let box_height: i32 = 6;
-    ctx.draw_box(0,
-                 MAPHEIGHT,
-                 MAPWIDTH as i32 - 1,
-                 box_height,
-                 RGB::named(rltk::WHITE),
-                 RGB::named(rltk::BLACK));
+    ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+
+    // draw health
+    let combat_stats = ecs.read_storage::<CombatStats>();
+    let players = ecs.read_storage::<Player>();
+    for (_player, stats) in (&players, &combat_stats).join() {
+        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
+        ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
+
+        ctx.draw_bar_horizontal(28, 43, 51, stats.hp, stats.max_hp, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+    }
+
+    // draw game message log
+    let log = ecs.fetch::<GameLog>();
+   
+    let mut y = 44;
+    for s in log.entries.iter().rev() {
+        if y < 49 { ctx.print(2, y, s); }
+        y += 1;
+    }
 }
 

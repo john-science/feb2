@@ -3,6 +3,7 @@ use specs::prelude::*;
 
 mod components;
 mod damage_system;
+mod gamelog;
 mod gui;
 mod map;
 mod map_indexing_system;
@@ -14,6 +15,7 @@ mod visibility_system;
 
 pub use components::*;
 pub use damage_system::*;
+pub use gamelog::*;
 pub use gui::*;
 pub use map::*;
 pub use map_indexing_system::*;
@@ -165,6 +167,7 @@ fn main() -> rltk::BError {
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(gamelog::GameLog{ entries : vec!["You are dead. You wake up in Purgatory.".to_string()] });
 
     rltk::main_loop(context, gs)
 }

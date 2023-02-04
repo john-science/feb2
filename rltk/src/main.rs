@@ -5,6 +5,7 @@ mod components;
 mod damage_system;
 mod gamelog;
 mod gui;
+mod inventory_system;
 mod map;
 mod map_indexing_system;
 mod melee_combat_system;
@@ -18,6 +19,7 @@ pub use components::*;
 pub use damage_system::*;
 pub use gamelog::*;
 pub use gui::*;
+pub use inventory_system::*;
 pub use map::*;
 pub use map_indexing_system::*;
 pub use melee_combat_system::MeleeCombatSystem;
@@ -46,6 +48,8 @@ impl State {
         melee.run_now(&self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -111,14 +115,18 @@ fn main() -> rltk::BError {
     };
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<InBackpack>();
+    gs.ecs.register::<Item>();
     gs.ecs.register::<Monster>();
     gs.ecs.register::<Name>();
     gs.ecs.register::<Player>();  // TODO: Is it possible in ECS to say there can be only one of these?
     gs.ecs.register::<Position>();
+    gs.ecs.register::<Potion>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<WantsToMelee>();
+    gs.ecs.register::<WantsToPickupItem>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -126,8 +134,7 @@ fn main() -> rltk::BError {
    
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        let (x,y) = room.center();
-        spawner::random_monster(&mut gs.ecs, x, y);
+        spawner::spawn_room(&mut gs.ecs, room);
     }
 
     gs.ecs.insert(map);
